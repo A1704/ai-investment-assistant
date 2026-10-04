@@ -1,132 +1,169 @@
-from datetime import datetime, timedelta, timezone
-
 import feedparser
+from datetime import datetime, timedelta, timezone
+from urllib.parse import quote
 
 
 NEWS_QUERIES = {
-    "COCHINSHIP": "Cochin Shipyard",
-    "HINDZINC": "Hindustan Zinc",
-    "SILVERBEES": '"Nippon India Silver ETF"',
+    "COCHINSHIP": '"Cochin Shipyard"',
+    "HINDZINC": '"Hindustan Zinc"',
+    "SILVERBEES": '"Nippon India Silver ETF" OR "Silver ETF"'
 }
 
 
+# Headlines containing these phrases are usually recommendation/opinion
+# articles rather than factual company or market developments.
+EXCLUDED_PHRASES = [
+    "buy or sell",
+    "buy, sell or hold",
+    "buy sell or hold",
+    "should you buy",
+    "should i buy",
+    "stock to buy",
+    "stocks to buy",
+    "top stock to buy",
+    "best stock to buy",
+    "target price",
+    "price target",
+    "buy call",
+    "sell call",
+    "hold call",
+    "buy recommendation",
+    "sell recommendation",
+    "negative breakout",
+    "positive breakout",
+    "breakout",
+    "breakdown",
+    "200 dma",
+    "200-day moving average",
+    "52-week high",
+    "52-week low",
+    "technical analysis",
+    "technical setup",
+    "resistance level",
+    "support level",
+]
+
+
+def is_recommendation_headline(title):
+    """
+    Return True when a headline looks primarily like
+    an investment recommendation or technical analysis.
+    """
+
+    title_lower = title.lower()
+
+    return any(
+        phrase in title_lower
+        for phrase in EXCLUDED_PHRASES
+    )
+
+
+def normalize_title(title):
+    """
+    Normalize a headline so that the same story published
+    by different sources can be detected as a duplicate.
+    """
+
+    normalized = title.lower().strip()
+
+    # Remove common source suffixes after " - "
+    if " - " in normalized:
+        normalized = normalized.rsplit(" - ", 1)[0]
+
+    # Remove common punctuation
+    for character in [
+        ".",
+        ",",
+        ":",
+        ";",
+        "!",
+        "?",
+        "(",
+        ")",
+        "[",
+        "]",
+    ]:
+        normalized = normalized.replace(character, "")
+
+    # Normalize whitespace
+    normalized = " ".join(normalized.split())
+
+    return normalized
+
+
 def get_company_news(symbol, max_items=5, days=7):
-    """
-    Fetch recent news headlines for a portfolio holding.
 
-    Returns:
-        title
-        source
-        link
-        published
-    """
+    query = NEWS_QUERIES.get(symbol)
 
-    if symbol not in NEWS_QUERIES:
-        raise ValueError(f"Unsupported portfolio symbol: {symbol}")
+    if not query:
+        return []
 
-    query = NEWS_QUERIES[symbol]
-
-    feed_url = (
-        "https://news.google.com/rss/search"
-        f"?q={query.replace(' ', '+')}"
+    url = (
+        "https://news.google.com/rss/search?"
+        f"q={quote(query)}"
         "&hl=en-IN"
         "&gl=IN"
         "&ceid=IN:en"
     )
 
-    feed = feedparser.parse(feed_url)
+    feed = feedparser.parse(url)
 
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
-    articles = []
+    results = []
     seen_titles = set()
 
     for entry in feed.entries:
 
         title = entry.get("title", "").strip()
+        source = entry.get("source", {}).get("title", "").strip()
         link = entry.get("link", "").strip()
-        published = entry.get("published", "").strip()
+        published = entry.get("published", "")
 
-        if not title or not link:
+        if not title:
             continue
 
-        # Remove duplicate headlines.
-        title_key = title.lower()
-
-        if title_key in seen_titles:
+        # Filter recommendation/opinion headlines
+        if is_recommendation_headline(title):
             continue
 
-        # Try to check publication date.
-        published_time = entry.get("published_parsed")
+        # Parse publication date when available
+        published_dt = None
 
-        if published_time:
-            published_datetime = datetime(
-                published_time.tm_year,
-                published_time.tm_mon,
-                published_time.tm_mday,
-                published_time.tm_hour,
-                published_time.tm_min,
-                published_time.tm_sec,
-                tzinfo=timezone.utc,
-            )
+        if published:
 
-            if published_datetime < cutoff:
-                continue
+            try:
+                published_dt = datetime(
+                    *entry.published_parsed[:6]
+                ).replace(
+                    tzinfo=timezone.utc
+                )
 
-        # Google News usually puts the source after " - ".
-        if " - " in title:
-            clean_title, source = title.rsplit(" - ", 1)
-        else:
-            clean_title = title
-            source = "Unknown"
+            except (AttributeError, TypeError, ValueError):
+                published_dt = None
 
-        seen_titles.add(title_key)
+        # Ignore articles outside requested time window
+        if published_dt and published_dt < cutoff:
+            continue
 
-        articles.append(
+        # Remove duplicate/syndicated headlines
+        normalized = normalize_title(title)
+
+        if normalized in seen_titles:
+            continue
+
+        seen_titles.add(normalized)
+
+        results.append(
             {
-                "title": clean_title.strip(),
-                "source": source.strip(),
+                "title": title,
+                "source": source or "Unknown",
                 "link": link,
                 "published": published,
             }
         )
 
-        if len(articles) >= max_items:
+        if len(results) >= max_items:
             break
 
-    return articles
-
-
-def test_news():
-    symbols = [
-        "COCHINSHIP",
-        "HINDZINC",
-        "SILVERBEES",
-    ]
-
-    for symbol in symbols:
-
-        print("\n" + "=" * 70)
-        print(f"NEWS: {symbol}")
-        print("=" * 70)
-
-        try:
-            articles = get_company_news(symbol)
-
-            if not articles:
-                print("No recent news found.")
-                continue
-
-            for index, article in enumerate(articles, start=1):
-
-                print(f"\n{index}. {article['title']}")
-                print(f"   Source: {article['source']}")
-                print(f"   Published: {article['published']}")
-                print(f"   Link: {article['link']}")
-
-        except Exception as exc:
-            print(f"ERROR: {exc}")
-
-
-if __name__ == "__main__":
-    test_news()
+    return results
