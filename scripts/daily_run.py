@@ -5,7 +5,7 @@ from investment_assistant.briefing import (
     build_briefing,
     build_html_email,
 )
-from investment_assistant.email import send_email
+from investment_assistant.gmail_sender import send_email
 from investment_assistant.portfolio import (
     add_opening_position,
     get_opening_positions,

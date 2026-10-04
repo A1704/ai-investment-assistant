@@ -1,0 +1,4365 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Investment Assistant</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f1f5f9;
+            color: #0f172a;
+            line-height: 1.55;
+            overflow-x: hidden;
+        }
+
+        section,
+        .card,
+        .analytics-card {
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            margin: auto;
+            padding: 30px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 30px;
+        }
+
+        header p {
+            margin: 6px 0 0;
+            color: #64748b;
+        }
+
+        .status {
+            display: inline-block;
+            background: #dcfce7;
+            color: #166534;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .status-limited {
+            background: #fef3c7;
+            color: #854d0e;
+        }
+
+        .status-insufficient-data {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-insufficient {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .dashboard-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            margin: 0 0 24px;
+            padding: 10px 0;
+            background: #f1f5f9;
+        }
+
+        .dashboard-nav a,
+        .assistant-example {
+            display: inline-block;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 999px;
+            background: #fff;
+            color: #1e3a8a;
+            font: inherit;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .dashboard-nav a:hover,
+        .assistant-example:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+        }
+
+        button,
+        a,
+        textarea {
+            transition: border-color 120ms ease, background-color 120ms ease;
+        }
+
+        button:focus-visible,
+        a:focus-visible,
+        textarea:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 2px;
+        }
+
+        section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 3px 12px rgba(15, 23, 42, 0.06);
+        }
+
+        section h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        /* OVERVIEW */
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .card {
+            padding: 22px;
+            border-radius: 14px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+
+        .card h3 {
+            margin: 0 0 10px;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .value {
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        .positive {
+            color: #166534;
+        }
+
+        .negative {
+            color: #b91c1c;
+        }
+
+        .metric-status {
+            display: block;
+            margin-top: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            padding: 14px 16px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 10px;
+            color: #475569;
+            background: #f8fafc;
+        }
+
+        .flash-message {
+            margin: 0 0 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+        }
+
+        .flash-error {
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            background: #fef2f2;
+        }
+
+        .flash-success {
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            background: #f0fdf4;
+        }
+
+        .assistant-panel {
+            border: 2px solid #bfdbfe;
+            background: linear-gradient(145deg, #fff 0%, #f8fbff 100%);
+        }
+
+        .assistant-question {
+            display: block;
+            width: 100%;
+            min-height: 92px;
+            padding: 14px;
+            border: 1px solid #94a3b8;
+            border-radius: 10px;
+            color: #0f172a;
+            background: #fff;
+            font: inherit;
+            resize: vertical;
+        }
+
+        .section-intro {
+            margin-top: -10px;
+            color: #475569;
+        }
+
+        .assistant-controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .assistant-controls button,
+        .assistant-read-button {
+            min-height: 42px;
+            padding: 10px 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: #fff;
+            color: #0f172a;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .assistant-controls .assistant-submit {
+            border-color: #1d4ed8;
+            background: #2563eb;
+            color: #fff;
+        }
+
+        button:disabled {
+            cursor: wait;
+            opacity: 0.65;
+        }
+
+        #assistant-voice-status {
+            min-height: 1.6em;
+            color: #334155;
+        }
+
+        #assistant-voice-status[data-state="error"] {
+            color: #991b1b;
+        }
+
+        #assistant-voice-status[data-state="listening"],
+        #assistant-voice-status[data-state="processing"],
+        #assistant-voice-status[data-state="speaking"] {
+            font-weight: 700;
+        }
+
+        .assistant-examples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 0;
+            list-style: none;
+        }
+
+        .assistant-example {
+            cursor: pointer;
+        }
+
+        .assistant-answer,
+        .assistant-action-result {
+            max-width: 78ch;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+            line-height: 1.75;
+        }
+
+        .assistant-answer {
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            background: #eff6ff;
+            padding: 18px;
+        }
+
+        .assistant-action-result {
+            border: 1px solid #c7d2fe;
+            border-radius: 12px;
+            background: #eef2ff;
+            padding: 18px;
+        }
+
+        .processing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .processing-indicator::before {
+            width: 12px;
+            height: 12px;
+            border: 2px solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            content: "";
+            animation: assistant-spin 700ms linear infinite;
+        }
+
+        @keyframes assistant-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* HOLDINGS */
+
+        .table-wrapper {
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            max-width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 850px;
+        }
+
+        th {
+            text-align: left;
+            padding: 14px;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        td {
+            padding: 16px 14px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* TWO COLUMN AREA */
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        /* ALLOCATION */
+
+        .allocation-row {
+            margin-bottom: 20px;
+        }
+
+        .allocation-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .allocation-bar {
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .allocation-fill {
+            height: 100%;
+            background: #2563eb;
+            border-radius: 10px;
+        }
+
+        /* ANALYTICS */
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .analytics-card {
+            padding: 18px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+        }
+
+        .analytics-card span {
+            display: block;
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .analytics-card strong {
+            font-size: 20px;
+        }
+
+        /* PERFORMANCE */
+
+        .performance-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .summary-box {
+            padding: 18px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .summary-box span {
+            display: block;
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .summary-box strong {
+            font-size: 20px;
+        }
+
+        .chart-container {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        #performanceChart {
+            width: 100%;
+            min-width: 700px;
+            height: 350px;
+            display: block;
+        }
+
+        /* FOOTER */
+
+        footer {
+            text-align: center;
+            color: #64748b;
+            font-size: 13px;
+            padding: 15px;
+        }
+
+        /* MOBILE */
+
+        @media (max-width: 900px) {
+
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+
+            .performance-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+
+            .container {
+                padding: 16px 12px;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            header h1 {
+                font-size: 24px;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .performance-summary {
+                grid-template-columns: 1fr;
+            }
+
+            section {
+                padding: 18px;
+            }
+
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-nav {
+                max-height: 30vh;
+                overflow-y: auto;
+            }
+
+            .dashboard-nav a,
+            .assistant-controls button {
+                min-height: 44px;
+            }
+
+            .assistant-controls button {
+                flex: 1 1 auto;
+            }
+
+            .assistant-controls small {
+                flex-basis: 100%;
+                margin-left: 0 !important;
+            }
+
+            .assistant-example {
+                max-width: 100%;
+                text-align: left;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+
+    <header>
+
+        <div>
+
+            <h1>AI Investment Assistant</h1>
+
+            <p>
+                Portfolio tracking · AI-assisted insights · voice interaction
+            </p>
+
+        </div>
+
+        <div
+            class="status status-{{ data_quality_report['overall_status']|lower|replace(' ', '-') }}"
+            role="status"
+            aria-label="Portfolio data status: {{ data_quality_report['overall_status'] }}"
+        >
+            {{ data_quality_report["overall_status"] }}
+        </div>
+
+    </header>
+
+    <nav class="dashboard-nav" aria-label="Dashboard sections">
+        <a href="#portfolio-overview">Overview</a>
+        <a href="#current-holdings">Holdings</a>
+        <a href="#portfolio-performance">Portfolio Performance</a>
+        <a href="#ai-assistant">AI Assistant</a>
+        <a href="#portfolio-changes">Alerts &amp; Changes</a>
+        <a href="#portfolio-intelligence">Portfolio Intelligence</a>
+        <a href="#risk-diversification">Risk &amp; Diversification</a>
+        <a href="#performance-attribution">Performance Attribution</a>
+        <a href="#historical-analytics">Historical Analytics</a>
+        <a href="#goals-benchmarks">Goals &amp; Benchmarks</a>
+        <a href="#data-quality">Data Quality</a>
+        <a href="#latest-news">News</a>
+    </nav>
+
+    {% for category, message in flashed_messages %}
+        <div
+            class="flash-message {{ 'flash-error' if category == 'error' else 'flash-success' }}"
+            role="{{ 'alert' if category == 'error' else 'status' }}"
+        >{{ message }}</div>
+    {% endfor %}
+
+    <!-- PORTFOLIO OVERVIEW -->
+
+    <section id="portfolio-overview">
+
+        <h2>Portfolio Overview</h2>
+        <p class="section-intro">
+            Current portfolio measurements, holdings, historical context,
+            and data-quality status in one place.
+        </p>
+
+        <div class="cards">
+
+            <div class="card">
+
+                <h3>Cost Basis</h3>
+
+                <div class="value">
+
+                    {% if data.portfolio.total_invested is not none %}
+                        {{ data.portfolio.total_invested|inr }}
+                    {% else %}Unavailable{% endif %}
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>Current Value</h3>
+
+                <div class="value">
+
+                    {% if data.portfolio.total_current_value is not none %}
+                        {{ data.portfolio.total_current_value|inr }}
+                    {% else %}Unavailable{% endif %}
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>Total P&L</h3>
+
+                <div class="value
+                    {% if data.portfolio.total_pnl is not none
+                          and data.portfolio.total_pnl >= 0 %}
+                        positive
+                    {% elif data.portfolio.total_pnl is not none %}
+                        negative
+                    {% endif %}
+                ">
+
+                    {% if data.portfolio.total_pnl is not none %}
+                        {{ data.portfolio.total_pnl|inr }}
+                    {% else %}Unavailable{% endif %}
+
+                </div>
+                {% if data.portfolio.total_pnl is not none %}
+                    <small class="metric-status {{ 'positive' if data.portfolio.total_pnl > 0 else 'negative' if data.portfolio.total_pnl < 0 else '' }}">
+                        {{ "Positive" if data.portfolio.total_pnl > 0 else "Negative" if data.portfolio.total_pnl < 0 else "Break-even" }}
+                    </small>
+                {% endif %}
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>Realized P&L</h3>
+
+                <div class="value
+                    {% if data.portfolio.total_realized_pnl is not none
+                          and data.portfolio.total_realized_pnl >= 0 %}
+                        positive
+                    {% elif data.portfolio.total_realized_pnl is not none %}
+                        negative
+                    {% endif %}
+                ">
+
+                    {% if data.portfolio.total_realized_pnl is not none %}
+                        {{ data.portfolio.total_realized_pnl|inr }}
+                    {% else %}Unavailable{% endif %}
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>Unrealized P&L</h3>
+
+                <div class="value
+                    {% if data.portfolio.total_unrealized_pnl is not none
+                          and data.portfolio.total_unrealized_pnl >= 0 %}
+                        positive
+                    {% elif data.portfolio.total_unrealized_pnl is not none %}
+                        negative
+                    {% endif %}
+                ">
+
+                    {% if data.portfolio.total_unrealized_pnl is not none %}
+                        {{ data.portfolio.total_unrealized_pnl|inr }}
+                    {% else %}Unavailable{% endif %}
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>Unrealized Return</h3>
+
+                <div class="value
+                    {% if data.portfolio.total_return_percent is not none
+                          and data.portfolio.total_return_percent >= 0 %}
+                        positive
+                    {% elif data.portfolio.total_return_percent is not none %}
+                        negative
+                    {% endif %}
+                ">
+
+                    {% if data.portfolio.total_return_percent is not none %}
+                        {{ "%.2f"|format(data.portfolio.total_return_percent) }}%
+                    {% else %}Unavailable{% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- HOLDINGS -->
+
+    <section id="current-holdings">
+
+        <h2>Holdings</h2>
+
+        <div class="table-wrapper" role="region" aria-label="Current holdings table" tabindex="0">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th scope="col">Symbol</th>
+                        <th scope="col">Company</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Average Price</th>
+                        <th scope="col">Current Price</th>
+                        <th scope="col">Market Value</th>
+                        <th scope="col">Total P&amp;L</th>
+                        <th scope="col">Allocation</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for symbol, position in
+                       data.portfolio.positions.items() %}
+                    {% set allocation = data.analytics.allocation.get(symbol) %}
+
+                    <tr>
+
+                        <td>
+                            <strong>{{ symbol }}</strong>
+                        </td>
+
+                        <td>
+                            {{ position.company_name or "Unavailable" }}
+                        </td>
+
+                        <td>
+                            {{ position.quantity|quantity }}
+                        </td>
+
+                        <td>
+                            {% if position.average_buy_price is not none %}
+                                {{ position.average_buy_price|inr }}
+                            {% else %}Unavailable{% endif %}
+                        </td>
+
+                        <td>
+                            {% if position.current_price is not none %}
+                                {{ position.current_price|inr }}
+                            {% else %}Current price data is unavailable for this holding.{% endif %}
+                        </td>
+
+                        <td>
+                            {% if position.current_value is not none %}
+                                {{ position.current_value|inr }}
+                            {% else %}Unavailable{% endif %}
+                        </td>
+
+                        <td class="
+                            {% if position.total_pnl is not none
+                                  and position.total_pnl >= 0 %}
+                                positive
+                            {% elif position.total_pnl is not none %}
+                                negative
+                            {% endif %}
+                        ">
+
+                            {% if position.total_pnl is not none %}
+                                {{ position.total_pnl|inr }}
+                            {% else %}Unavailable{% endif %}
+                            {% if position.total_pnl is not none %}
+                                <span class="metric-status {{ 'positive' if position.total_pnl > 0 else 'negative' if position.total_pnl < 0 else '' }}">
+                                    {{ "Positive" if position.total_pnl > 0 else "Negative" if position.total_pnl < 0 else "Break-even" }}
+                                </span>
+                            {% endif %}
+
+                        </td>
+                        <td>
+                            {% if allocation and allocation.allocation_percent is not none %}
+                                {{ "%.2f"|format(allocation.allocation_percent) }}%
+                            {% else %}Unavailable{% endif %}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                    {% if not data.portfolio.positions %}
+                        <tr>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    No current holdings are available. Add transaction records to see portfolio positions.
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+    <!-- ALLOCATION + RISK -->
+
+    <div class="two-column">
+
+
+        <!-- ALLOCATION -->
+
+        <section>
+
+            <h2>Portfolio Allocation</h2>
+
+            {% if data.analytics.allocation %}
+            {% for symbol, allocation in
+               data.analytics.allocation.items() %}
+
+
+            <div class="allocation-row">
+
+                <div class="allocation-header">
+
+                    <strong>
+                        {{ symbol }}
+                    </strong>
+
+                    <span>
+                        {{ "%.2f"|format(
+                            allocation.allocation_percent
+                        ) }}%
+                    </span>
+
+                </div>
+
+
+                <div class="allocation-bar">
+
+                    <div
+                        class="allocation-fill"
+                        style="
+                            width:
+                            {{ allocation.allocation_percent }}%;
+                        "
+                    ></div>
+
+                </div>
+
+            </div>
+
+
+            {% endfor %}
+            {% else %}
+                <p class="empty-state">Allocation is unavailable until current prices are available.</p>
+            {% endif %}
+
+        </section>
+
+
+        <!-- RISK -->
+
+        <section>
+
+            <h2>Risk & Analytics</h2>
+
+
+            <div class="analytics-grid">
+
+
+                <div class="analytics-card">
+
+                    <span>
+                        Number of Holdings
+                    </span>
+
+                    <strong>
+                        {{
+                            data.analytics.concentration
+                            .holding_count
+                        }}
+                    </strong>
+
+                </div>
+
+
+                <div class="analytics-card">
+
+                    <span>
+                        Largest Holding
+                    </span>
+
+                    <strong>
+
+                        {{
+                            data.analytics.concentration
+                            .largest_holding_symbol
+                            or "N/A"
+                        }}
+
+                    </strong>
+
+                </div>
+
+
+                <div class="analytics-card">
+
+                    <span>
+                        Largest Allocation
+                    </span>
+
+                    <strong>
+
+                        {% if data.analytics.concentration.largest_holding_percent is not none %}
+                            {{ "%.2f"|format(data.analytics.concentration.largest_holding_percent) }}%
+                        {% else %}Unavailable{% endif %}
+
+                    </strong>
+
+                </div>
+
+
+                <div class="analytics-card">
+
+                    <span>
+                        Maximum Drawdown
+                    </span>
+
+                    <strong class="negative">
+                        {% if data.analytics.max_drawdown.max_drawdown_amount is not none %}
+                            {{ data.analytics.max_drawdown.max_drawdown_amount|inr }}
+                        {% else %}
+                            Insufficient historical data.
+                        {% endif %}
+
+                    </strong>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+    </div>
+
+
+    <!-- RISK & DIVERSIFICATION INTELLIGENCE -->
+
+    <section id="risk-diversification">
+        <h2>Risk &amp; Diversification</h2>
+        <div class="analytics-grid">
+            <div class="analytics-card">
+                <span>Number of Holdings</span>
+                <strong>{{ risk_intelligence.portfolio_concentration.number_of_holdings }}</strong>
+            </div>
+            <div class="analytics-card">
+                <span>Largest Holding</span>
+                <strong>{{ risk_intelligence.portfolio_concentration.largest_holding_symbol or "Unavailable" }}</strong>
+            </div>
+            <div class="analytics-card">
+                <span>Largest Holding Allocation</span>
+                <strong>
+                    {% if risk_intelligence.portfolio_concentration.largest_holding_percentage is not none %}
+                        {{ "%.2f"|format(risk_intelligence.portfolio_concentration.largest_holding_percentage) }}%
+                    {% else %}Unavailable{% endif %}
+                </strong>
+            </div>
+            <div class="analytics-card">
+                <span>Concentration Index (HHI-style)</span>
+                <strong>
+                    {% if risk_intelligence.portfolio_concentration.hhi_style_concentration_index is not none %}
+                        {{ "%.2f"|format(risk_intelligence.portfolio_concentration.hhi_style_concentration_index) }}
+                    {% else %}Unavailable{% endif %}
+                </strong>
+                <small>Sum of squared allocation percentages (0–10,000)</small>
+            </div>
+            <div class="analytics-card">
+                <span>Highest Recorded Value</span>
+                <strong>
+                    {% if risk_intelligence.historical_risk.highest_recorded_value is not none %}
+                        ₹{{ "%.2f"|format(risk_intelligence.historical_risk.highest_recorded_value) }}
+                    {% else %}Unavailable{% endif %}
+                </strong>
+            </div>
+            <div class="analytics-card">
+                <span>Lowest Recorded Value</span>
+                <strong>
+                    {% if risk_intelligence.historical_risk.lowest_recorded_value is not none %}
+                        ₹{{ "%.2f"|format(risk_intelligence.historical_risk.lowest_recorded_value) }}
+                    {% else %}Unavailable{% endif %}
+                </strong>
+            </div>
+            <div class="analytics-card">
+                <span>Maximum Drawdown</span>
+                <strong>
+                    {% if risk_intelligence.historical_risk.available
+                          and risk_intelligence.historical_risk.maximum_drawdown %}
+                        ₹{{ "%.2f"|format(risk_intelligence.historical_risk.maximum_drawdown.max_drawdown_amount) }}
+                    {% else %}Unavailable{% endif %}
+                </strong>
+            </div>
+            <div class="analytics-card">
+                <span>Historical Data Available</span>
+                <strong>{{ "Yes" if risk_intelligence.historical_risk.available else "No" }}</strong>
+                {% if not risk_intelligence.historical_risk.available %}
+                    <small>{{ risk_intelligence.historical_risk.limitation }}</small>
+                {% endif %}
+            </div>
+        </div>
+
+        <h3>Holding Exposure &amp; Allocation</h3>
+        {% if risk_intelligence.holding_exposure %}
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Company</th>
+                            <th>Market Value</th>
+                            <th>Allocation</th>
+                            <th>Unrealized P&amp;L</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for holding in risk_intelligence.holding_exposure %}
+                            <tr>
+                                <td>{{ holding.symbol }}</td>
+                                <td>{{ holding.company_name or "Unavailable" }}</td>
+                                <td>
+                                    {% if holding.market_value is not none %}
+                                        ₹{{ "%.2f"|format(holding.market_value) }}
+                                    {% else %}Unavailable{% endif %}
+                                </td>
+                                <td>
+                                    {% if holding.allocation_percent is not none %}
+                                        {{ "%.2f"|format(holding.allocation_percent) }}%
+                                    {% else %}Unavailable{% endif %}
+                                </td>
+                                <td>
+                                    {% if holding.unrealized_pnl is not none %}
+                                        ₹{{ "%.2f"|format(holding.unrealized_pnl) }}
+                                    {% else %}Unavailable{% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>Current holding exposure is unavailable.</p>
+        {% endif %}
+        <p>{{ risk_intelligence.portfolio_composition.classification_message }}</p>
+        {% if risk_intelligence.data_quality.limitations %}
+            <p>Data limitations: {{ risk_intelligence.data_quality.limitations | join("; ") }}</p>
+        {% endif %}
+    </section>
+
+
+    <!-- PERFORMANCE ATTRIBUTION -->
+
+    <section id="performance-attribution">
+        <h2>Performance Attribution</h2>
+        {% if performance_attribution.available %}
+            <h3>Portfolio Movement</h3>
+            <p>
+                {{ performance_attribution.portfolio_movement.previous_date }}
+                → {{ performance_attribution.portfolio_movement.latest_date }}:
+                ₹{{ "%.2f"|format(performance_attribution.portfolio_movement.previous_value) }}
+                → ₹{{ "%.2f"|format(performance_attribution.portfolio_movement.latest_value) }}
+                (
+                {% if performance_attribution.portfolio_movement.value_change >= 0 %}+{% endif %}
+                ₹{{ "%.2f"|format(performance_attribution.portfolio_movement.value_change) }}
+                {% if performance_attribution.portfolio_movement.value_change_percent is not none %}
+                    / {{ "%.2f"|format(performance_attribution.portfolio_movement.value_change_percent) }}%
+                {% endif %}
+                )
+            </p>
+            <p>
+                Total P&amp;L change:
+                {% if performance_attribution.portfolio_movement.total_pnl_change >= 0 %}+{% endif %}
+                ₹{{ "%.2f"|format(performance_attribution.portfolio_movement.total_pnl_change) }}
+            </p>
+
+            <h3>Holding Contributions</h3>
+            {% if performance_attribution.holding_attribution.available %}
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Symbol</th>
+                                <th>Company</th>
+                                <th>Previous Value</th>
+                                <th>Latest Value</th>
+                                <th>Change</th>
+                                <th>Contribution</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for holding in performance_attribution.holding_attribution.holdings %}
+                                <tr>
+                                    <td>{{ holding.symbol }}</td>
+                                    <td>{{ holding.company_name or "Unavailable" }}</td>
+                                    <td>
+                                        {% if holding.previous_market_value is not none %}
+                                            ₹{{ "%.2f"|format(holding.previous_market_value) }}
+                                        {% else %}Unavailable{% endif %}
+                                    </td>
+                                    <td>
+                                        {% if holding.latest_market_value is not none %}
+                                            ₹{{ "%.2f"|format(holding.latest_market_value) }}
+                                        {% else %}Unavailable{% endif %}
+                                    </td>
+                                    <td>
+                                        {% if holding.market_value_change is not none %}
+                                            {% if holding.market_value_change >= 0 %}+{% endif %}
+                                            ₹{{ "%.2f"|format(holding.market_value_change) }}
+                                        {% else %}Unavailable{% endif %}
+                                    </td>
+                                    <td>
+                                        {% if holding.contribution_to_portfolio_change is not none %}
+                                            {% if holding.contribution_to_portfolio_change >= 0 %}+{% endif %}
+                                            ₹{{ "%.2f"|format(holding.contribution_to_portfolio_change) }}
+                                        {% else %}Unavailable{% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p>
+                    Largest positive contributor:
+                    {% if performance_attribution.summary.largest_positive_contributor %}
+                        {{ performance_attribution.summary.largest_positive_contributor.symbol }}
+                        (₹{{ "%.2f"|format(performance_attribution.summary.largest_positive_contributor.market_value_change) }})
+                    {% else %}Unavailable{% endif %}
+                </p>
+                <p>
+                    Largest negative contributor:
+                    {% if performance_attribution.summary.largest_negative_contributor %}
+                        {{ performance_attribution.summary.largest_negative_contributor.symbol }}
+                        (₹{{ "%.2f"|format(performance_attribution.summary.largest_negative_contributor.market_value_change) }})
+                    {% else %}Unavailable{% endif %}
+                </p>
+            {% else %}
+                <p>Holding-level attribution unavailable: {{ performance_attribution.holding_attribution.reason }}</p>
+            {% endif %}
+
+            <p>
+                Price/transaction attribution:
+                {% if performance_attribution.price_transaction_attribution.available %}
+                    Available as endpoint-based arithmetic only; this does not establish causation.
+                {% else %}
+                    {{ performance_attribution.price_transaction_attribution.reason }}
+                {% endif %}
+            </p>
+            <p>Holding contributions describe observed mathematical movement, not causal explanations.</p>
+            {% if performance_attribution.limitations %}
+                <p>Limitations: {{ performance_attribution.limitations | join("; ") }}</p>
+            {% endif %}
+        {% else %}
+            <p>{{ performance_attribution.reason }}</p>
+        {% endif %}
+    </section>
+
+
+    <!-- PERFORMANCE -->
+
+    <section id="historical-analytics">
+        <h2>Historical Performance</h2>
+
+
+        {% if historical_analytics.history %}
+
+
+        <div class="performance-summary">
+
+
+            <div class="summary-box">
+
+                <span>
+                    Snapshots
+                </span>
+
+                <strong>
+                    {{ historical_analytics.trend_metrics.snapshot_count }}
+                </strong>
+
+            </div>
+
+
+            <div class="summary-box">
+
+                <span>
+                    First Snapshot
+                </span>
+
+                <strong>
+                    {{ historical_analytics.trend_metrics.first_snapshot_date or "Unavailable" }}
+                </strong>
+
+            </div>
+
+
+            <div class="summary-box">
+
+                <span>
+                    Latest Snapshot
+                </span>
+
+                <strong>
+                    {{ historical_analytics.trend_metrics.latest_snapshot_date or "Unavailable" }}
+                </strong>
+
+            </div>
+
+
+            <div class="summary-box">
+
+                <span>
+                    First-to-Latest Change
+                </span>
+
+                <strong>
+                    {% if historical_analytics.trend_metrics.first_to_latest_change is not none %}
+                        ₹{{ "%.2f"|format(historical_analytics.trend_metrics.first_to_latest_change) }}
+                        {% if historical_analytics.trend_metrics.first_to_latest_change_percent is not none %}
+                            ({{ "%.2f"|format(historical_analytics.trend_metrics.first_to_latest_change_percent) }}%)
+                        {% endif %}
+                    {% else %}Unavailable{% endif %}
+                </strong>
+
+            </div>
+
+            <div class="summary-box">
+                <span>Highest Value</span>
+                <strong>
+                    {% if historical_analytics.trend_metrics.highest_recorded_value is not none %}
+                        ₹{{ "%.2f"|format(historical_analytics.trend_metrics.highest_recorded_value) }}
+                    {% else %}Unavailable{% endif %}
+                </strong>
+            </div>
+
+            <div class="summary-box">
+                <span>Lowest Value</span>
+                <strong>
+                    {% if historical_analytics.trend_metrics.lowest_recorded_value is not none %}
+                        ₹{{ "%.2f"|format(historical_analytics.trend_metrics.lowest_recorded_value) }}
+                    {% else %}Unavailable{% endif %}
+                </strong>
+            </div>
+
+            <div class="summary-box">
+                <span>Maximum Drawdown</span>
+                <strong>
+                    {% if historical_analytics.drawdown.available %}
+                        ₹{{ "%.2f"|format(historical_analytics.drawdown.max_drawdown_amount) }}
+                        ({{ "%.2f"|format(historical_analytics.drawdown.max_drawdown_percent) }}%)
+                    {% else %}
+                        {{ historical_analytics.drawdown.message }}
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div class="summary-box">
+                <span>Observed Trend</span>
+                <strong>{{ historical_analytics.trend_metrics.trend }}</strong>
+            </div>
+
+            <div class="summary-box">
+                <span>Highest / Lowest Total P&amp;L</span>
+                <strong>
+                    {% if historical_analytics.trend_metrics.highest_total_pnl is not none %}
+                        ₹{{ "%.2f"|format(historical_analytics.trend_metrics.highest_total_pnl) }}
+                        /
+                        ₹{{ "%.2f"|format(historical_analytics.trend_metrics.lowest_total_pnl) }}
+                    {% else %}Unavailable{% endif %}
+                </strong>
+            </div>
+
+            <div class="summary-box">
+                <span>Highest / Lowest Unrealized Return</span>
+                <strong>
+                    {% if historical_analytics.trend_metrics.highest_unrealized_return_percent is not none %}
+                        {{ "%.2f"|format(historical_analytics.trend_metrics.highest_unrealized_return_percent) }}%
+                        /
+                        {{ "%.2f"|format(historical_analytics.trend_metrics.lowest_unrealized_return_percent) }}%
+                    {% else %}Unavailable{% endif %}
+                </strong>
+            </div>
+
+
+        </div>
+
+        <p>
+            Exact 7-day comparison:
+            {% if historical_analytics.period_comparisons.latest_vs_7_days.available %}
+                ₹{{ "%.2f"|format(historical_analytics.period_comparisons.latest_vs_7_days.value_change) }}
+                ({{ "%.2f"|format(historical_analytics.period_comparisons.latest_vs_7_days.value_change_percent) }}%)
+            {% else %}
+                {{ historical_analytics.period_comparisons.latest_vs_7_days.message }}
+            {% endif %}
+        </p>
+        <p>
+            Exact 30-day comparison:
+            {% if historical_analytics.period_comparisons.latest_vs_30_days.available %}
+                ₹{{ "%.2f"|format(historical_analytics.period_comparisons.latest_vs_30_days.value_change) }}
+                ({{ "%.2f"|format(historical_analytics.period_comparisons.latest_vs_30_days.value_change_percent) }}%)
+            {% else %}
+                {{ historical_analytics.period_comparisons.latest_vs_30_days.message }}
+            {% endif %}
+        </p>
+        {% if historical_analytics.data_quality.limitations %}
+            <p>
+                Data limitations:
+                {{ historical_analytics.data_quality.limitations | join("; ") }}
+            </p>
+        {% endif %}
+
+        {% if historical_analytics.history | length >= 2 %}
+            <div class="chart-container">
+                <svg
+                    id="performanceChart"
+                    viewBox="0 0 1000 350"
+                    preserveAspectRatio="none"
+                ></svg>
+            </div>
+        {% else %}
+            <p>Insufficient historical data to display a portfolio-value trend chart.</p>
+        {% endif %}
+
+
+        {% else %}
+
+        <p>No portfolio performance snapshots have been recorded yet.</p>
+
+        {% endif %}
+
+    </section>
+
+    <!-- DATA QUALITY & RELIABILITY -->
+    <section id="data-quality">
+        <h2>Data Quality &amp; Reliability</h2>
+        <div class="analytics-card">
+            <span>Overall Status</span>
+                <strong class="status status-{{ data_quality_report['overall_status']|lower|replace(' ', '-') }}">
+                    {{ data_quality_report["overall_status"] }}
+                </strong>
+            <p>{{ data_quality_report["summary"] }}</p>
+        </div>
+
+        <div class="cards" style="margin-top:16px;">
+            {% for key, label in [
+                ("portfolio", "Portfolio Data"),
+                ("market_price", "Market Data"),
+                ("snapshot_history", "Historical Data"),
+                ("goals", "Goal Data"),
+                ("benchmarks", "Benchmark Data"),
+                ("news", "News Data")
+            ] %}
+                <div class="card">
+                    <h3>{{ label }}</h3>
+                    <div class="value">
+                        {{ data_quality_report["categories"][key]["status"] }}
+                    </div>
+                    <small>{{ data_quality_report["categories"][key]["summary"] }}</small>
+                </div>
+            {% endfor %}
+        </div>
+
+        <h3>Market Data by Holding</h3>
+        {% if data_quality_report["market_data"]["holdings"] %}
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Price</th>
+                            <th>Source</th>
+                            <th>Exchange</th>
+                            <th>Retrieved</th>
+                            <th>Market Timestamp</th>
+                            <th>Freshness</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for holding in data_quality_report["market_data"]["holdings"] %}
+                            <tr>
+                                <td>{{ holding["symbol"] }}</td>
+                                <td>
+                                    {% if holding["price"] is not none %}
+                                        {{ holding["currency"] or "" }}
+                                        {{ "%.2f"|format(holding["price"]) }}
+                                    {% else %}Unavailable{% endif %}
+                                </td>
+                                <td>{{ holding["source"] or "Unavailable" }}</td>
+                                <td>{{ holding["exchange"] or "Unavailable" }}</td>
+                                <td>{{ holding["retrieved_at"] or "Unavailable" }}</td>
+                                <td>{{ holding["market_timestamp"] or "Unavailable" }}</td>
+                                <td>{{ holding["freshness"]["category"] }}</td>
+                                <td>{{ holding["status"] }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No current holding market-price records are available.</p>
+        {% endif %}
+
+        <h3>Historical Data Coverage</h3>
+        <ul>
+            <li>Snapshots: {{ data_quality_report["snapshot_history"]["snapshot_count"] }}</li>
+            <li>Earliest: {{ data_quality_report["snapshot_history"]["earliest_snapshot_date"] or "Unavailable" }}</li>
+            <li>Latest: {{ data_quality_report["snapshot_history"]["latest_snapshot_date"] or "Unavailable" }}</li>
+            <li>Detailed snapshots: {{ data_quality_report["snapshot_history"]["detailed_snapshot_count"] }}</li>
+            <li>Aggregate-only snapshots: {{ data_quality_report["snapshot_history"]["aggregate_only_snapshot_count"] }}</li>
+            <li>Trend analysis: {{ data_quality_report["snapshot_history"]["trend_analysis"]["status"] }}</li>
+            <li>Drawdown analysis: {{ data_quality_report["snapshot_history"]["drawdown_analysis"]["status"] }}</li>
+            <li>Holding-level attribution: {{ data_quality_report["snapshot_history"]["holding_level_attribution"]["status"] }}</li>
+        </ul>
+        {% if data_quality_report["snapshot_history"]["details"] %}
+            <ul>
+                {% for detail in data_quality_report["snapshot_history"]["details"] %}
+                    <li>{{ detail }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% if data_quality_report["snapshot_history"]["snapshots"] %}
+            <h4>Recorded Snapshot Detail</h4>
+            <ul>
+                {% for snapshot in data_quality_report["snapshot_history"]["snapshots"] %}
+                    <li>{{ snapshot["date"] }} — {{ snapshot["detail_status"] }} snapshot</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% if data_quality_report["snapshot_history"]["missing_date_intervals"] %}
+            <p>
+                Calendar dates without a stored snapshot are shown as gaps only;
+                snapshot cadence is not assumed.
+            </p>
+        {% endif %}
+
+        <h3>Data Quality Issues</h3>
+        {% if data_quality_report["issues"] %}
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Severity</th>
+                            <th>Issue</th>
+                            <th>Affected Data</th>
+                            <th>Blocks Calculation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for issue in data_quality_report["issues"] %}
+                            <tr>
+                                <td>{{ issue["category"] }}</td>
+                                <td>{{ issue["severity"] }}</td>
+                                <td>{{ issue["message"] }}</td>
+                                <td>
+                                    {% if issue["affected_items"] %}
+                                        {{ issue["affected_items"] | join(", ") }}
+                                    {% else %}—{% endif %}
+                                </td>
+                                <td>{{ "Yes" if issue["blocks_calculation"] else "No" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No data-quality issues were identified in the supplied data.</p>
+        {% endif %}
+
+        {% if data_quality_report["news"]["holdings"] %}
+            <h3>News Availability by Holding</h3>
+            <ul>
+                {% for item in data_quality_report["news"]["holdings"] %}
+                    <li>
+                        {{ item["symbol"] }}:
+                        {{ item["relevant_item_count"] }} relevant item(s).
+                        {% if item["message"] %}{{ item["message"] }}{% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+            <p>
+                The absence of relevant news is not interpreted as positive
+                or negative information.
+            </p>
+        {% endif %}
+
+        <p>Market-data source limitation:
+            {{ data_quality_report["market_data"]["source_limitation"] }}
+        </p>
+    </section>
+
+    <!-- GOALS & BENCHMARKS -->
+    <section id="goals-benchmarks">
+        <h2>Goals &amp; Benchmarks</h2>
+
+        <div class="cards">
+            <div class="card">
+                <h3>Active Goals</h3>
+                <div class="value">{{ goals_intelligence.active_goal_count }}</div>
+            </div>
+            <div class="card">
+                <h3>Latest Portfolio Value</h3>
+                <div class="value">
+                    {% if goals_intelligence.latest_portfolio_value is not none %}
+                        ₹{{ "%.2f"|format(goals_intelligence.latest_portfolio_value) }}
+                    {% else %}Unavailable{% endif %}
+                </div>
+            </div>
+            {% for goal in goals_intelligence.goals
+               if goal["target_type"] == "PORTFOLIO_VALUE" %}
+                <div class="card">
+                    <h3>{{ goal["goal_name"] }} — Target Value</h3>
+                    <div class="value">₹{{ "%.2f"|format(goal["target_value"]) }}</div>
+                    <small>
+                        Progress:
+                        {% if goal["progress_percent"] is not none %}
+                            {{ "%.2f"|format(goal["progress_percent"]) }}%
+                        {% else %}Unavailable{% endif %}
+                        · Remaining:
+                        {% if goal["remaining_amount"] is not none %}
+                            ₹{{ "%.2f"|format(goal["remaining_amount"]) }}
+                        {% else %}Unavailable{% endif %}
+                        · Target date: {{ goal["target_date"] or "Not set" }}
+                    </small>
+                </div>
+            {% endfor %}
+        </div>
+
+        <h3>Portfolio Goals</h3>
+        {% if goals_intelligence.goals %}
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Goal</th>
+                            <th>Type</th>
+                            <th>Target</th>
+                            <th>Current</th>
+                            <th>Difference</th>
+                            <th>Progress</th>
+                            <th>Target Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for goal in goals_intelligence.goals %}
+                            <tr>
+                                <td>{{ goal["goal_name"] }}</td>
+                                <td>{{ goal["target_type"] }}</td>
+                                <td>
+                                    {% if goal["unit"] == "currency" %}
+                                        ₹{{ "%.2f"|format(goal["target_value"]) }}
+                                    {% else %}
+                                        {{ "%.2f"|format(goal["target_value"]) }}%
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if goal["current_value"] is none %}
+                                        Unavailable
+                                    {% elif goal["unit"] == "currency" %}
+                                        ₹{{ "%.2f"|format(goal["current_value"]) }}
+                                    {% else %}
+                                        {{ "%.2f"|format(goal["current_value"]) }}%
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if goal["difference"] is none %}
+                                        Unavailable
+                                    {% elif goal["difference_unit"] == "currency" %}
+                                        ₹{{ "%+.2f"|format(goal["difference"]) }}
+                                    {% else %}
+                                        {{ "%+.2f"|format(goal["difference"]) }} pp
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if goal["progress_percent"] is not none %}
+                                        {{ "%.2f"|format(goal["progress_percent"]) }}%
+                                    {% else %}Unavailable{% endif %}
+                                </td>
+                                <td>
+                                    {% if goal["target_date"] %}
+                                        {{ goal["target_date"] }}<br>
+                                        {{ goal["target_date_status"] }}
+                                    {% else %}Not set{% endif %}
+                                </td>
+                                <td>
+                                    {{ goal["status"] }}
+                                    {% if goal["latest_portfolio_data_date"] %}
+                                        <br><small>Data:
+                                            {{ goal["latest_portfolio_data_date"] }}
+                                        </small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No portfolio goals configured.</p>
+        {% endif %}
+
+        <h3>Configured Benchmarks</h3>
+        {% if goals_intelligence.benchmarks %}
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Benchmark</th>
+                            <th>Period</th>
+                            <th>Portfolio Return</th>
+                            <th>Benchmark Return</th>
+                            <th>Difference</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for benchmark in goals_intelligence.benchmarks %}
+                            <tr>
+                                <td>
+                                    {{ benchmark["benchmark_name"] }}
+                                    {% if benchmark["benchmark_symbol"] %}
+                                        ({{ benchmark["benchmark_symbol"] }})
+                                    {% endif %}
+                                </td>
+                                {% if benchmark["comparison"]["available"] %}
+                                    <td>
+                                        {{ benchmark["comparison"]["period_start_date"] }}
+                                        to
+                                        {{ benchmark["comparison"]["period_end_date"] }}
+                                    </td>
+                                    <td>{{ "%.2f"|format(benchmark["comparison"]["portfolio_return_percent"]) }}%</td>
+                                    <td>{{ "%.2f"|format(benchmark["comparison"]["benchmark_return_percent"]) }}%</td>
+                                    <td>{{ "%+.2f"|format(benchmark["comparison"]["difference_percentage_points"]) }} pp</td>
+                                {% else %}
+                                    <td colspan="4">Benchmark comparison unavailable.</td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if goals_intelligence.benchmarks
+                  | selectattr("comparison.available")
+                  | list %}
+                <p>
+                    Portfolio return is the value change between exact
+                    matching snapshots; transaction cash flows are not
+                    adjusted.
+                </p>
+            {% endif %}
+        {% else %}
+            <p>No portfolio benchmarks configured.</p>
+        {% endif %}
+
+        <div class="two-column">
+            <div>
+                <h3>Add Goal</h3>
+                <form action="{{ url_for('add_portfolio_goal_route') }}"
+                      method="post"
+                      style="display:grid; gap:10px;">
+                    <label>Goal Name
+                        <input type="text" name="goal_name" required maxlength="120">
+                    </label>
+                    <label>Target Type
+                        <select name="target_type" required>
+                            <option value="PORTFOLIO_VALUE">Portfolio Value</option>
+                            <option value="ABSOLUTE_PNL">Absolute P&amp;L</option>
+                            <option value="RETURN_PERCENT">Return Percent</option>
+                        </select>
+                    </label>
+                    <label>Target Value
+                        <input type="number" name="target_value" required
+                               min="0" step="any">
+                    </label>
+                    <label>Target Date (optional)
+                        <input type="date" name="target_date">
+                    </label>
+                    <button type="submit">Add Goal</button>
+                </form>
+            </div>
+
+            <div>
+                <h3>Add Benchmark</h3>
+                <form action="{{ url_for('add_portfolio_benchmark_route') }}"
+                      method="post"
+                      style="display:grid; gap:10px;">
+                    <label>Benchmark Name
+                        <input type="text" name="benchmark_name" required maxlength="120">
+                    </label>
+                    <label>Benchmark Symbol (optional)
+                        <input type="text" name="benchmark_symbol" maxlength="40">
+                    </label>
+                    <label>Benchmark Type
+                        <select name="benchmark_type" required>
+                            <option value="USER_PROVIDED_VALUE">
+                                User-provided value/index observation
+                            </option>
+                            <option value="USER_PROVIDED_RETURN">
+                                User-provided cumulative return percent
+                            </option>
+                        </select>
+                    </label>
+                    <button type="submit">Add Benchmark</button>
+                </form>
+            </div>
+        </div>
+
+        {% if goals_intelligence.benchmarks %}
+            <h3>Add User-Provided Benchmark Observation</h3>
+            <p>
+                Enter actual observations only. Value/index observations must
+                be positive; return observations are cumulative percentages
+                from a consistent user-selected baseline. Comparisons use
+                exact dates shared with portfolio snapshots.
+            </p>
+            <form action="{{ url_for('add_portfolio_benchmark_observation_route') }}"
+                  method="post"
+                  style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px;">
+                <label>Benchmark
+                    <select name="benchmark_id" required>
+                        {% for benchmark in goals_intelligence.benchmarks %}
+                            <option value="{{ benchmark['id'] }}">
+                                {{ benchmark["benchmark_name"] }}
+                                ({{ benchmark["benchmark_type"] }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>Observation Date
+                    <input type="date" name="observation_date" required>
+                </label>
+                <label>Observation Value
+                    <input type="number" name="value" step="any" required>
+                </label>
+                <button type="submit">Add Observation</button>
+            </form>
+        {% endif %}
+    </section>
+
+
+    <footer>
+
+        AI Investment Assistant · Personal Portfolio Analytics
+
+    </footer>
+
+</div>
+
+<!-- PORTFOLIO PERFORMANCE -->
+
+<section id="portfolio-performance" style="margin-top: 30px;">
+
+    <h2>📈 Portfolio Performance</h2>
+
+    {% if historical_analytics.history %}
+
+        <div style="
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 22px;
+        ">
+
+            <!-- PERFORMANCE SUMMARY -->
+
+            <div style="
+                display: flex;
+                flex-wrap: wrap;
+                gap: 25px;
+                margin-bottom: 25px;
+            ">
+
+                <div>
+                    <div style="
+                        font-size: 13px;
+                        color: #64748b;
+                    ">
+                        Current Value
+                    </div>
+
+                    <div style="
+                        font-size: 22px;
+                        font-weight: 700;
+                        color: #0f172a;
+                    ">
+                        {% if data.portfolio.total_current_value is not none %}
+                            ₹{{ "%.2f"|format(data.portfolio.total_current_value) }}
+                        {% else %}Unavailable{% endif %}
+                    </div>
+                </div>
+
+
+                <div>
+                    <div style="
+                        font-size: 13px;
+                        color: #64748b;
+                    ">
+                        Total P&L
+                    </div>
+
+                    <div style="
+                        font-size: 22px;
+                        font-weight: 700;
+                        color: #0f172a;
+                    ">
+                        {% if data.portfolio.total_pnl is not none %}
+                            ₹{{ "%.2f"|format(data.portfolio.total_pnl) }}
+                        {% else %}Unavailable{% endif %}
+                    </div>
+                </div>
+
+
+                <div>
+                    <div style="
+                        font-size: 13px;
+                        color: #64748b;
+                    ">
+                        Unrealized Return
+                    </div>
+
+                    <div style="
+                        font-size: 22px;
+                        font-weight: 700;
+                        color: #0f172a;
+                    ">
+                        {% if data.portfolio.total_return_percent is not none %}
+                            {{ "%.2f"|format(data.portfolio.total_return_percent) }}%
+                        {% else %}Unavailable{% endif %}
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- PERFORMANCE CHART -->
+
+            <div style="
+                margin-top: 10px;
+                margin-bottom: 30px;
+            ">
+
+                <h3 style="
+                    margin-bottom: 15px;
+                    color: #0f172a;
+                    font-size: 17px;
+                ">
+                    Portfolio Value Over Time
+                </h3>
+
+
+                {% if historical_analytics.history | length >= 2 %}
+                <div style="
+                    width: 100%;
+                    overflow-x: auto;
+                ">
+
+                    <svg
+                        id="portfolioPerformanceChart"
+                        viewBox="0 0 900 360"
+                        style="
+                            width: 100%;
+                            min-width: 650px;
+                            height: 360px;
+                            display: block;
+                        "
+                        aria-label="Portfolio value over time chart"
+                    >
+
+                        <!-- Chart background -->
+
+                        <rect
+                            x="0"
+                            y="0"
+                            width="900"
+                            height="360"
+                            fill="#ffffff"
+                            rx="10"
+                        />
+
+
+                        <!-- Grid lines -->
+
+                        <line
+                            x1="70"
+                            y1="40"
+                            x2="850"
+                            y2="40"
+                            stroke="#e2e8f0"
+                            stroke-width="1"
+                        />
+
+                        <line
+                            x1="70"
+                            y1="110"
+                            x2="850"
+                            y2="110"
+                            stroke="#e2e8f0"
+                            stroke-width="1"
+                        />
+
+                        <line
+                            x1="70"
+                            y1="180"
+                            x2="850"
+                            y2="180"
+                            stroke="#e2e8f0"
+                            stroke-width="1"
+                        />
+
+                        <line
+                            x1="70"
+                            y1="250"
+                            x2="850"
+                            y2="250"
+                            stroke="#e2e8f0"
+                            stroke-width="1"
+                        />
+
+                        <line
+                            x1="70"
+                            y1="320"
+                            x2="850"
+                            y2="320"
+                            stroke="#e2e8f0"
+                            stroke-width="1"
+                        />
+
+
+                        <!-- Axes -->
+
+                        <line
+                            x1="70"
+                            y1="40"
+                            x2="70"
+                            y2="320"
+                            stroke="#94a3b8"
+                            stroke-width="1.5"
+                        />
+
+                        <line
+                            x1="70"
+                            y1="320"
+                            x2="850"
+                            y2="320"
+                            stroke="#94a3b8"
+                            stroke-width="1.5"
+                        />
+
+
+                        <!-- Chart generated by JavaScript -->
+
+                        <g id="performanceChartLabels"></g>
+
+                        <path
+                            id="performanceChartLine"
+                            fill="none"
+                            stroke="#2563eb"
+                            stroke-width="3"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        ></path>
+
+                        <g id="performanceChartPoints"></g>
+
+                    </svg>
+
+                </div>
+                {% else %}
+                    <p>Insufficient historical data to display a portfolio-value trend chart.</p>
+                {% endif %}
+
+            </div>
+
+
+            <!-- PERFORMANCE TABLE -->
+
+            <div style="
+                overflow-x: auto;
+            ">
+
+                <h3 style="
+                    margin-bottom: 12px;
+                    color: #0f172a;
+                    font-size: 17px;
+                ">
+                    Historical Snapshots
+                </h3>
+
+
+                <table style="
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 14px;
+                ">
+
+                    <thead>
+
+                        <tr style="
+                            border-bottom: 2px solid #e2e8f0;
+                            text-align: left;
+                        ">
+
+                            <th style="padding: 10px;">
+                                Date
+                            </th>
+
+                            <th style="padding: 10px;">
+                                Cost Basis
+                            </th>
+
+                            <th style="padding: 10px;">
+                                Portfolio Value
+                            </th>
+
+                            <th style="padding: 10px;">P&amp;L</th>
+                            <th style="padding: 10px;">Unrealized P&amp;L</th>
+                            <th style="padding: 10px;">Unrealized Return</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for snapshot in historical_analytics.history %}
+
+                            <tr style="
+                                border-bottom: 1px solid #e2e8f0;
+                            ">
+
+                                <td style="padding: 10px;">
+                                    {{ snapshot.date }}
+                                </td>
+
+                                <td style="padding: 10px;">
+                                    {% if snapshot.total_invested is not none %}
+                                        ₹{{ "%.2f"|format(snapshot.total_invested) }}
+                                    {% else %}Unavailable{% endif %}
+                                </td>
+
+                                <td style="padding: 10px;">
+                                    {% if snapshot.total_current_value is not none %}
+                                        ₹{{ "%.2f"|format(snapshot.total_current_value) }}
+                                    {% else %}Unavailable{% endif %}
+                                </td>
+
+                                <td style="padding: 10px;">
+                                    {% if snapshot.total_pnl is not none %}
+                                        ₹{{ "%.2f"|format(snapshot.total_pnl) }}
+                                    {% else %}Unavailable{% endif %}
+                                </td>
+
+                                <td style="padding: 10px;">
+                                    {% if snapshot.total_unrealized_pnl is not none %}
+                                        ₹{{ "%.2f"|format(snapshot.total_unrealized_pnl) }}
+                                    {% else %}Unavailable{% endif %}
+                                </td>
+
+                                <td style="padding: 10px;">
+                                    {% if snapshot.total_return_percent is not none %}
+                                        {{ "%.2f"|format(snapshot.total_return_percent) }}%
+                                    {% else %}Unavailable{% endif %}
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- CHART SCRIPT -->
+
+        <script>
+
+            const performanceHistory = [
+                {% for snapshot in historical_analytics.history %}
+                {
+                    date: "{{ snapshot.date }}",
+                    value: {{ snapshot.total_current_value }}
+                }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ];
+
+
+            const chartLine = document.getElementById(
+                "performanceChartLine"
+            );
+
+            const chartPoints = document.getElementById(
+                "performanceChartPoints"
+            );
+
+            const chartLabels = document.getElementById(
+                "performanceChartLabels"
+            );
+
+
+            if (performanceHistory.length >= 2) {
+
+                const chartLeft = 70;
+                const chartRight = 850;
+                const chartTop = 40;
+                const chartBottom = 320;
+
+                const chartWidth = chartRight - chartLeft;
+                const chartHeight = chartBottom - chartTop;
+
+
+                const values = performanceHistory.map(
+                    item => item.value
+                );
+
+
+                let minValue = Math.min(...values);
+                let maxValue = Math.max(...values);
+
+
+                /*
+                 * Add some vertical breathing room.
+                 * This is especially important when there
+                 * is only one snapshot.
+                 */
+
+                if (minValue === maxValue) {
+
+                    const padding =
+                        Math.max(Math.abs(minValue) * 0.02, 100);
+
+                    minValue -= padding;
+                    maxValue += padding;
+
+                } else {
+
+                    const padding =
+                        (maxValue - minValue) * 0.10;
+
+                    minValue -= padding;
+                    maxValue += padding;
+
+                }
+
+
+                const points = performanceHistory.map(
+                    (item, index) => {
+
+                        const x =
+                            performanceHistory.length === 1
+                                ? chartLeft + chartWidth / 2
+                                : chartLeft +
+                                  (
+                                      index /
+                                      (performanceHistory.length - 1)
+                                  ) *
+                                  chartWidth;
+
+
+                        const y =
+                            chartBottom -
+                            (
+                                (item.value - minValue) /
+                                (maxValue - minValue)
+                            ) *
+                            chartHeight;
+
+
+                        return {
+                            x: x,
+                            y: y,
+                            value: item.value,
+                            date: item.date
+                        };
+
+                    }
+                );
+
+
+                const pathData = points
+                    .map(
+                        (point, index) =>
+                            `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`
+                    )
+                    .join(" ");
+
+
+                chartLine.setAttribute(
+                    "d",
+                    pathData
+                );
+
+
+                points.forEach(point => {
+
+                    const circle =
+                        document.createElementNS(
+                            "http://www.w3.org/2000/svg",
+                            "circle"
+                        );
+
+
+                    circle.setAttribute(
+                        "cx",
+                        point.x
+                    );
+
+                    circle.setAttribute(
+                        "cy",
+                        point.y
+                    );
+
+                    circle.setAttribute(
+                        "r",
+                        "5"
+                    );
+
+                    circle.setAttribute(
+                        "fill",
+                        "#2563eb"
+                    );
+
+
+                    const title =
+                        document.createElementNS(
+                            "http://www.w3.org/2000/svg",
+                            "title"
+                        );
+
+
+                    title.textContent =
+                        `${point.date}: ₹${point.value.toFixed(2)}`;
+
+
+                    circle.appendChild(title);
+
+                    chartPoints.appendChild(circle);
+
+                });
+
+
+                /*
+                 * X-axis date labels
+                 */
+
+                points.forEach(point => {
+
+                    const text =
+                        document.createElementNS(
+                            "http://www.w3.org/2000/svg",
+                            "text"
+                        );
+
+
+                    text.setAttribute(
+                        "x",
+                        point.x
+                    );
+
+                    text.setAttribute(
+                        "y",
+                        "345"
+                    );
+
+                    text.setAttribute(
+                        "text-anchor",
+                        "middle"
+                    );
+
+                    text.setAttribute(
+                        "font-size",
+                        "12"
+                    );
+
+                    text.setAttribute(
+                        "fill",
+                        "#64748b"
+                    );
+
+
+                    text.textContent =
+                        point.date;
+
+
+                    chartLabels.appendChild(text);
+
+                });
+
+
+                /*
+                 * Y-axis labels
+                 */
+
+                const yLabels = 5;
+
+
+                for (let i = 0; i < yLabels; i++) {
+
+                    const ratio =
+                        i / (yLabels - 1);
+
+
+                    const value =
+                        maxValue -
+                        ratio *
+                        (maxValue - minValue);
+
+
+                    const y =
+                        chartTop +
+                        ratio *
+                        chartHeight;
+
+
+                    const text =
+                        document.createElementNS(
+                            "http://www.w3.org/2000/svg",
+                            "text"
+                        );
+
+
+                    text.setAttribute(
+                        "x",
+                        "60"
+                    );
+
+                    text.setAttribute(
+                        "y",
+                        y + 4
+                    );
+
+                    text.setAttribute(
+                        "text-anchor",
+                        "end"
+                    );
+
+                    text.setAttribute(
+                        "font-size",
+                        "12"
+                    );
+
+                    text.setAttribute(
+                        "fill",
+                        "#64748b"
+                    );
+
+
+                    text.textContent =
+                        "₹" +
+                        Math.round(value).toLocaleString("en-IN");
+
+
+                    chartLabels.appendChild(text);
+
+                }
+
+            }
+
+        </script>
+
+    {% else %}
+
+        <div style="
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 22px;
+            color: #64748b;
+        ">
+
+            No historical portfolio snapshots available yet.
+
+        </div>
+
+    {% endif %}
+
+</section>
+
+<!-- TRANSACTIONS -->
+
+<section style="margin-top: 30px;">
+
+    <h2>💳 Add Transaction</h2>
+
+    <div style="
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 22px;
+    ">
+
+        <form
+            method="POST"
+            action="/transaction"
+            style="
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 16px;
+                align-items: end;
+            "
+        >
+
+            <!-- SYMBOL -->
+
+            <div>
+
+                <label style="
+                    display: block;
+                    font-size: 13px;
+                    color: #64748b;
+                    margin-bottom: 6px;
+                ">
+                    Symbol
+                </label>
+
+                <select
+                    name="symbol"
+                    required
+                    style="
+                        width: 100%;
+                        padding: 10px;
+                        border: 1px solid #cbd5e1;
+                        border-radius: 8px;
+                        background: white;
+                    "
+                >
+
+                    <option value="COCHINSHIP">
+                        COCHINSHIP
+                    </option>
+
+                    <option value="HINDZINC">
+                        HINDZINC
+                    </option>
+
+                    <option value="SILVERBEES">
+                        SILVERBEES
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- COMPANY NAME -->
+
+            <input
+                type="hidden"
+                id="companyName"
+                name="company_name"
+                value="Cochin Shipyard Limited"
+            >
+
+
+            <!-- TRANSACTION TYPE -->
+
+            <div>
+
+                <label style="
+                    display: block;
+                    font-size: 13px;
+                    color: #64748b;
+                    margin-bottom: 6px;
+                ">
+                    Transaction Type
+                </label>
+
+                <select
+                    name="transaction_type"
+                    required
+                    style="
+                        width: 100%;
+                        padding: 10px;
+                        border: 1px solid #cbd5e1;
+                        border-radius: 8px;
+                        background: white;
+                    "
+                >
+
+                    <option value="BUY">
+                        BUY
+                    </option>
+
+                    <option value="SELL">
+                        SELL
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- QUANTITY -->
+
+            <div>
+
+                <label style="
+                    display: block;
+                    font-size: 13px;
+                    color: #64748b;
+                    margin-bottom: 6px;
+                ">
+                    Quantity
+                </label>
+
+                <input
+                    type="number"
+                    name="quantity"
+                    min="0.0001"
+                    step="0.0001"
+                    required
+                    placeholder="e.g. 5"
+                    style="
+                        width: 100%;
+                        padding: 10px;
+                        border: 1px solid #cbd5e1;
+                        border-radius: 8px;
+                    "
+                >
+
+            </div>
+
+
+            <!-- PRICE -->
+
+            <div>
+
+                <label style="
+                    display: block;
+                    font-size: 13px;
+                    color: #64748b;
+                    margin-bottom: 6px;
+                ">
+                    Price
+                </label>
+
+                <input
+                    type="number"
+                    name="price"
+                    min="0"
+                    step="0.01"
+                    required
+                    placeholder="e.g. 1500"
+                    style="
+                        width: 100%;
+                        padding: 10px;
+                        border: 1px solid #cbd5e1;
+                        border-radius: 8px;
+                    "
+                >
+
+            </div>
+
+
+            <!-- DATE -->
+
+            <div>
+
+                <label style="
+                    display: block;
+                    font-size: 13px;
+                    color: #64748b;
+                    margin-bottom: 6px;
+                ">
+                    Transaction Date
+                </label>
+
+                <input
+                    type="date"
+                    name="transaction_date"
+                    required
+                    style="
+                        width: 100%;
+                        padding: 10px;
+                        border: 1px solid #cbd5e1;
+                        border-radius: 8px;
+                    "
+                >
+
+            </div>
+
+
+            <!-- BUTTON -->
+
+            <div>
+
+                <button
+                    type="submit"
+                    style="
+                        width: 100%;
+                        padding: 11px 18px;
+                        border: none;
+                        border-radius: 8px;
+                        background: #0f172a;
+                        color: white;
+                        font-weight: 600;
+                        cursor: pointer;
+                    "
+                >
+                    Add Transaction
+                </button>
+
+            </div>
+
+        </form>
+
+    <script>
+        const transactionSymbol =
+            document.querySelector('select[name="symbol"]');
+
+        const companyName =
+            document.getElementById('companyName');
+
+        const companyNames = {
+            COCHINSHIP: "Cochin Shipyard Limited",
+            HINDZINC: "Hindustan Zinc Limited",
+            SILVERBEES: "Nippon India Silver ETF"
+        };
+
+        transactionSymbol.addEventListener("change", function () {
+
+            companyName.value =
+                companyNames[this.value] || "";
+
+        });
+    </script>
+
+    </div>
+
+</section>
+
+<!-- TRANSACTION HISTORY -->
+
+<section style="margin-top: 30px;">
+
+    <h2>📋 Recent Transactions</h2>
+
+    <div style="
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 22px;
+        overflow-x: auto;
+    ">
+
+        {% if transactions %}
+
+            <table style="
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 14px;
+            ">
+
+                <thead>
+                    <tr style="
+                        border-bottom: 2px solid #e2e8f0;
+                        text-align: left;
+                    ">
+                        <th style="padding: 10px;">Date</th>
+                        <th style="padding: 10px;">Symbol</th>
+                        <th style="padding: 10px;">Type</th>
+                        <th style="padding: 10px;">Quantity</th>
+                        <th style="padding: 10px;">Price</th>
+                        <th style="padding: 10px;">Value</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for transaction in transactions %}
+
+                        <tr style="
+                            border-bottom: 1px solid #e2e8f0;
+                        ">
+
+                            <td style="padding: 10px;">
+                                {{ transaction["transaction_date"] }}
+                            </td>
+
+                            <td style="
+                                padding: 10px;
+                                font-weight: 600;
+                            ">
+                                {{ transaction["symbol"] }}
+                            </td>
+
+                            <td style="padding: 10px;">
+                                {{ transaction["transaction_type"] }}
+                            </td>
+
+                            <td style="padding: 10px;">
+                                {{ transaction["quantity"] }}
+                            </td>
+
+                            <td style="padding: 10px;">
+                                ₹{{ "%.2f"|format(transaction["price"]) }}
+                            </td>
+
+                            <td style="padding: 10px;">
+                                ₹{{ "%.2f"|format(
+                                    transaction["quantity"] *
+                                    transaction["price"]
+                                ) }}
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        {% else %}
+
+            <p style="
+                color: #64748b;
+                margin: 0;
+            ">
+                No transactions recorded yet.
+            </p>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
+<!-- PORTFOLIO ANALYTICS -->
+<section style="margin-top: 30px;">
+    <h2>📊 Portfolio Analytics</h2>
+
+    <div style="
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    ">
+
+        <div style="
+            padding: 18px;
+            border-radius: 12px;
+            background: #f5f7fa;
+            border: 1px solid #ddd;
+        ">
+            <div style="font-size: 14px; color: #666;">
+                Portfolio Value
+            </div>
+            <div style="font-size: 24px; font-weight: bold; margin-top: 6px;">
+                {% if data.portfolio.total_current_value is not none %}
+                    ₹{{ "%.2f"|format(data.portfolio.total_current_value) }}
+                {% else %}Unavailable{% endif %}
+            </div>
+        </div>
+
+        <div style="
+            padding: 18px;
+            border-radius: 12px;
+            background: #f5f7fa;
+            border: 1px solid #ddd;
+        ">
+            <div style="font-size: 14px; color: #666;">
+                Total P&L
+            </div>
+            <div style="font-size: 24px; font-weight: bold; margin-top: 6px;">
+                {% if data.portfolio.total_pnl is not none %}
+                    ₹{{ "%.2f"|format(data.portfolio.total_pnl) }}
+                {% else %}Unavailable{% endif %}
+            </div>
+        </div>
+
+        <div style="
+            padding: 18px;
+            border-radius: 12px;
+            background: #f5f7fa;
+            border: 1px solid #ddd;
+        ">
+            <div style="font-size: 14px; color: #666;">
+                Unrealized Return
+            </div>
+            <div style="font-size: 24px; font-weight: bold; margin-top: 6px;">
+                {% if data.portfolio.total_return_percent is not none %}
+                    {{ "%.2f"|format(data.portfolio.total_return_percent) }}%
+                {% else %}Unavailable{% endif %}
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ALLOCATION & CONCENTRATION -->
+<section style="margin-top: 30px;">
+    <h2>📈 Allocation & Concentration</h2>
+
+    <div style="
+        margin-top: 15px;
+        padding: 18px;
+        border-radius: 12px;
+        background: #f5f7fa;
+        border: 1px solid #ddd;
+    ">
+
+        <h3 style="margin-top: 0;">Portfolio Allocation</h3>
+
+        {% for symbol, allocation in data.analytics.allocation.items() %}
+        <div style="margin-top: 14px;">
+
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+                margin-bottom: 5px;
+            ">
+                <strong>{{ symbol }}</strong>
+
+                <span>
+                    ₹{{ "%.2f"|format(allocation.current_value) }}
+                    ·
+                    {{ "%.2f"|format(allocation.allocation_percent) }}%
+                </span>
+            </div>
+
+            <div style="
+                width: 100%;
+                height: 10px;
+                background: #e0e0e0;
+                border-radius: 6px;
+                overflow: hidden;
+            ">
+                <div style="
+                    width: {{ allocation.allocation_percent }}%;
+                    height: 100%;
+                    background: #4f46e5;
+                    border-radius: 6px;
+                "></div>
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+
+    <div style="
+        margin-top: 15px;
+        padding: 18px;
+        border-radius: 12px;
+        background: #f5f7fa;
+        border: 1px solid #ddd;
+    ">
+
+        <h3 style="margin-top: 0;">Concentration</h3>
+
+        <p style="margin: 8px 0;">
+            <strong>Holdings:</strong>
+            {{ data.analytics.concentration.holding_count }}
+        </p>
+
+        <p style="margin: 8px 0;">
+            <strong>Largest Holding:</strong>
+            {{ data.analytics.concentration.largest_holding_symbol }}
+        </p>
+
+        <p style="margin: 8px 0;">
+            <strong>Largest Holding Value:</strong>
+            {% if data.analytics.concentration.largest_holding_value is not none %}
+                ₹{{ "%.2f"|format(data.analytics.concentration.largest_holding_value) }}
+            {% else %}Unavailable{% endif %}
+        </p>
+
+        <p style="margin: 8px 0;">
+            <strong>Portfolio Share:</strong>
+            {% if data.analytics.concentration.largest_holding_percent is not none %}
+                {{ "%.2f"|format(data.analytics.concentration.largest_holding_percent) }}%
+            {% else %}Unavailable{% endif %}
+        </p>
+
+    </div>
+</section>
+
+<!-- PORTFOLIO INTELLIGENCE -->
+
+<section id="portfolio-intelligence">
+    <h2>Portfolio Intelligence</h2>
+
+    <div class="analytics-grid">
+        <div class="analytics-card">
+            <span>Portfolio Value</span>
+            <strong>
+                {% if portfolio_intelligence.portfolio_overview.current_portfolio_value is not none %}
+                    ₹{{ "%.2f"|format(portfolio_intelligence.portfolio_overview.current_portfolio_value) }}
+                {% else %}Unavailable{% endif %}
+            </strong>
+            <small>
+                Cost basis:
+                {% if portfolio_intelligence.portfolio_overview.current_cost_basis is not none %}
+                    ₹{{ "%.2f"|format(portfolio_intelligence.portfolio_overview.current_cost_basis) }}
+                {% else %}Unavailable{% endif %}
+            </small>
+        </div>
+
+        <div class="analytics-card">
+            <span>Recent Change</span>
+            <strong>
+                {% if portfolio_intelligence.performance.available %}
+                    ₹{{ "%.2f"|format(portfolio_intelligence.performance.portfolio_value_change) }}
+                    {% if portfolio_intelligence.performance.portfolio_value_change_percent is not none %}
+                        ({{ "%.2f"|format(portfolio_intelligence.performance.portfolio_value_change_percent) }}%)
+                    {% endif %}
+                {% else %}
+                    Historical comparison unavailable
+                {% endif %}
+            </strong>
+            <small>
+                {% if portfolio_intelligence.performance.available %}
+                    {{ portfolio_intelligence.performance.previous_snapshot_date }}
+                    → {{ portfolio_intelligence.performance.latest_snapshot_date }}
+                {% else %}
+                    {{ portfolio_intelligence.data_limitations | join(" ") }}
+                {% endif %}
+            </small>
+        </div>
+
+        <div class="analytics-card">
+            <span>Largest Movement</span>
+            {% if portfolio_intelligence.contributors
+                  and portfolio_intelligence.contributors.largest_positive %}
+                <strong>
+                    +{{ portfolio_intelligence.contributors.largest_positive.symbol }}
+                    ₹{{ "%.2f"|format(portfolio_intelligence.contributors.largest_positive.market_value_change) }}
+                </strong>
+                <small>Largest positive contributor to the latest portfolio-value change</small>
+                {% if portfolio_intelligence.contributors.largest_negative %}
+                    <strong style="display:block; margin-top:8px;">
+                        −{{ portfolio_intelligence.contributors.largest_negative.symbol }}
+                        ₹{{ "%.2f"|format(portfolio_intelligence.contributors.largest_negative.market_value_change | abs) }}
+                    </strong>
+                    <small>Largest negative contributor to the latest portfolio-value change</small>
+                {% endif %}
+            {% elif portfolio_intelligence.contributors
+                    and portfolio_intelligence.contributors.largest_negative %}
+                <strong>
+                    −{{ portfolio_intelligence.contributors.largest_negative.symbol }}
+                    ₹{{ "%.2f"|format(portfolio_intelligence.contributors.largest_negative.market_value_change | abs) }}
+                </strong>
+                <small>Largest negative contributor to the latest portfolio-value change</small>
+            {% else %}
+                <strong>Unavailable</strong>
+                <small>Requires two detailed snapshots</small>
+            {% endif %}
+        </div>
+
+        <div class="analytics-card">
+            <span>Concentration</span>
+            <strong>
+                {{ portfolio_intelligence.concentration.largest_holding_symbol or "Unavailable" }}
+            </strong>
+            <small>
+                {% if portfolio_intelligence.concentration.largest_holding_percent is not none %}
+                    {{ "%.2f"|format(portfolio_intelligence.concentration.largest_holding_percent) }}%
+                    of current portfolio value
+                {% else %}Allocation unavailable{% endif %}
+            </small>
+        </div>
+    </div>
+
+    <h3>Recent Holding Changes</h3>
+    {% if portfolio_intelligence.holding_level_changes.available
+          and portfolio_intelligence.holding_level_changes["items"] %}
+        <p>
+            Comparing detailed snapshots:
+            {{ portfolio_intelligence.holding_level_changes.previous_date }}
+            → {{ portfolio_intelligence.holding_level_changes.latest_date }}
+        </p>
+        <ul>
+            {% for holding in portfolio_intelligence.holding_level_changes["items"] %}
+                <li>
+                    <strong>{{ holding.company_name }} ({{ holding.symbol }})</strong>
+                    {% if holding.status in ["added", "removed"] %}
+                        — {{ holding.status }} since the previous detailed snapshot.
+                    {% else %}
+                        — value change:
+                        {% if holding.market_value_change is not none %}
+                            ₹{{ "%.2f"|format(holding.market_value_change) }}
+                        {% else %}unavailable{% endif %};
+                        unrealized P&amp;L change:
+                        {% if holding.unrealized_pnl_change is not none %}
+                            ₹{{ "%.2f"|format(holding.unrealized_pnl_change) }}
+                        {% else %}unavailable{% endif %};
+                        allocation change:
+                        {% if holding.allocation_change_percentage_points is not none %}
+                            {{ "%.2f"|format(holding.allocation_change_percentage_points) }} pp
+                        {% else %}unavailable{% endif %}.
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>{{ portfolio_intelligence.holding_level_changes.limitation or
+            "No holding-level comparison is available." }}</p>
+    {% endif %}
+
+    <h3>Current Allocation</h3>
+    {% if portfolio_intelligence.concentration.allocations %}
+        <ul>
+            {% for holding in portfolio_intelligence.concentration.allocations %}
+                <li>
+                    {{ holding.symbol }}:
+                    {{ "%.2f"|format(holding.allocation_percent) }}%
+                    (₹{{ "%.2f"|format(holding.current_value) }})
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Current allocation data is unavailable.</p>
+    {% endif %}
+
+    {% if portfolio_intelligence.alerts %}
+        <h3>Alerts</h3>
+        <ul>
+            {% for alert in portfolio_intelligence.alerts %}
+                <li>
+                    <strong>{{ alert.severity }}</strong>
+                    {% if alert.symbol %} · {{ alert.symbol }}{% endif %}
+                    — {{ alert.message }}
+                    {% if alert.threshold is defined %}
+                        (threshold: {{ alert.threshold }}
+                        {{ alert.threshold_unit }})
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <h3>Alerts</h3>
+        <p>No snapshot-change alerts are available.</p>
+    {% endif %}
+
+    <h3>Relevant News</h3>
+    {% if portfolio_intelligence.relevant_news["items"] %}
+        <ul>
+            {% for article in portfolio_intelligence.relevant_news["items"] %}
+                <li>
+                    <strong>{{ article.symbol }}</strong>:
+                    {% if article.url %}
+                        <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">
+                            {{ article.headline }}
+                        </a>
+                    {% else %}
+                        {{ article.headline }}
+                    {% endif %}
+                    — {{ article.source or "Source unavailable" }}
+                    {% if article.publication_date %}
+                        · {{ article.publication_date }}
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>{{ portfolio_intelligence.relevant_news.message }}</p>
+    {% endif %}
+    <p style="color:#64748b;">
+        News is contextual information and is not evidence that an article caused
+        any portfolio or price movement.
+    </p>
+
+    <h3>Things to Monitor</h3>
+    {% if portfolio_intelligence.things_to_monitor %}
+        <ul>
+            {% for item in portfolio_intelligence.things_to_monitor %}
+                <li>{{ item.description }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No factual monitoring items are available.</p>
+    {% endif %}
+
+    {% if portfolio_intelligence.data_limitations %}
+        <h3>Data Availability</h3>
+        <ul>
+            {% for limitation in portfolio_intelligence.data_limitations %}
+                <li>{{ limitation }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</section>
+
+<!-- AI PORTFOLIO ASSISTANT -->
+
+<section id="ai-assistant" class="assistant-panel">
+    <h2>AI Portfolio Assistant</h2>
+
+    <p style="color:#64748b; margin-top:-8px;">
+        Ask questions answered using your portfolio's actual data,
+        analytics, and relevant recent news.
+    </p>
+
+    <form
+        id="assistant-form"
+        action="{{ url_for('assistant_route') }}"
+        method="post"
+        aria-describedby="assistant-voice-status"
+    >
+        <label for="assistant-question" style="
+            display:block;
+            margin-bottom:8px;
+            font-weight:600;
+        ">Your question</label>
+        <textarea
+            id="assistant-question"
+            class="assistant-question"
+            name="question"
+            rows="3"
+            required
+            placeholder="Ask about your portfolio, history, alerts, or data quality..."
+            style="
+                width:100%;
+                padding:12px;
+                border:1px solid #cbd5e1;
+                border-radius:8px;
+                font:inherit;
+                resize:vertical;
+            "
+        >{{ assistant_question or '' }}</textarea>
+        <div class="assistant-controls">
+        <button
+            type="button"
+            id="assistant-microphone"
+            aria-label="Speak a portfolio question"
+            aria-pressed="false"
+            style="
+                margin-top:12px;
+                padding:11px 18px;
+                border:1px solid #cbd5e1;
+                border-radius:8px;
+                background:#f8fafc;
+                color:#0f172a;
+                font-weight:600;
+                cursor:pointer;
+            "
+        >🎤 Speak</button>
+        <small style="margin-left:8px; color:#64748b;">
+            Voice recognition uses your browser's speech service and is not stored by this app.
+        </small>
+        <button
+            type="button"
+            id="assistant-test-voice"
+            style="
+                margin-top:12px;
+                padding:11px 18px;
+                border:1px solid #cbd5e1;
+                border-radius:8px;
+                background:#f8fafc;
+                color:#0f172a;
+                font-weight:600;
+                cursor:pointer;
+            "
+        >🔊 Test voice</button>
+        <button
+            type="button"
+            id="assistant-stop-speaking"
+            hidden
+            style="
+                margin-top:12px;
+                padding:11px 18px;
+                border:1px solid #cbd5e1;
+                border-radius:8px;
+                background:#fff;
+                cursor:pointer;
+            "
+        >🔊 Stop speaking</button>
+        <button type="submit" id="assistant-submit" class="assistant-submit" style="
+            margin-top:12px;
+            padding:11px 18px;
+            border:0;
+            border-radius:8px;
+            background:#2563eb;
+            color:white;
+            font-weight:600;
+            cursor:pointer;
+        ">Ask Assistant</button>
+        </div>
+    </form>
+
+    <p id="assistant-voice-status" role="status" aria-live="polite" style="
+        min-height:1.5em;
+        margin:10px 0 0;
+        color:#64748b;
+    " data-state="idle">Ready</p>
+
+    <div style="margin-top:18px; color:#64748b;">
+        <strong>Example questions:</strong>
+        <ul class="assistant-examples">
+            <li><button type="button" class="assistant-example" data-question="What changed in my portfolio?">What changed in my portfolio?</button></li>
+            <li><button type="button" class="assistant-example" data-question="Where is my portfolio concentrated?">Where is my portfolio concentrated?</button></li>
+            <li><button type="button" class="assistant-example" data-question="What is my current portfolio value?">What is my current portfolio value?</button></li>
+            <li><button type="button" class="assistant-example" data-question="How much unrealized P&amp;L do I have?">How much unrealized P&amp;L do I have?</button></li>
+            <li><button type="button" class="assistant-example" data-question="Do I have enough historical data?">Do I have enough historical data?</button></li>
+            <li><button type="button" class="assistant-example" data-question="Are there any data-quality issues?">Are there any data-quality issues?</button></li>
+        </ul>
+    </div>
+
+    {% if assistant_action_result %}
+        <div class="assistant-action-result" role="status" aria-live="polite">
+            <h3>Computer action</h3>
+            <p>{{ assistant_action_result }}</p>
+        </div>
+    {% endif %}
+
+    {% if assistant_answer %}
+        <div
+            id="assistant-answer"
+            class="assistant-answer"
+            role="status"
+            aria-live="polite"
+            style="margin-top:20px;"
+        >
+            <h3>Assistant answer</h3>
+            {{ assistant_answer }}
+        </div>
+        <button
+            type="button"
+            id="assistant-read-answer"
+            class="assistant-read-button"
+            aria-label="Read the assistant answer aloud"
+        >🔊 Read answer aloud</button>
+    {% endif %}
+
+</section>
+
+<!-- AI INSIGHTS -->
+
+<section>
+
+    <h2>🤖 AI Portfolio Insights</h2>
+
+    {% if ai_analysis %}
+
+        <div style="
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 22px;
+            line-height: 1.7;
+            color: #334155;
+        ">
+
+            {% for line in ai_analysis.split('\n') %}
+
+                {# Ignore the AI's duplicate top-level title #}
+                {% if line.startswith('## ') %}
+
+                    <!-- AI response title intentionally omitted -->
+
+                {# Section headings such as ### 1. Portfolio Overview #}
+                {% elif line.startswith('### ') %}
+
+                    <h3 style="
+                        margin-top: 24px;
+                        margin-bottom: 10px;
+                        color: #0f172a;
+                        font-size: 18px;
+                        font-weight: 700;
+                    ">
+                        {{ line[4:] }}
+                    </h3>
+
+                {# Horizontal separators #}
+                {% elif line.startswith('---') %}
+
+                    <hr style="
+                        border: 0;
+                        border-top: 1px solid #e2e8f0;
+                        margin: 18px 0;
+                    ">
+
+                {# AI bullet points using the • character #}
+                {% elif line.startswith('•') %}
+
+                    <div style="
+                        display: flex;
+                        gap: 10px;
+                        margin: 8px 0;
+                        padding-left: 4px;
+                    ">
+
+                        <span style="
+                            color: #475569;
+                            font-weight: 600;
+                        ">
+                            •
+                        </span>
+
+                        <span>
+                            {{ line[1:] | replace('\\', '') | replace('*', '') | trim }}
+                        </span>
+
+                    </div>
+
+                {# Older bullet format using * #}
+                {% elif line.startswith('* ') %}
+
+                    <div style="
+                        display: flex;
+                        gap: 10px;
+                        margin: 8px 0;
+                        padding-left: 4px;
+                    ">
+
+                        <span style="
+                            color: #475569;
+                            font-weight: 600;
+                        ">
+                            •
+                        </span>
+
+                        <span>
+                            {{ line[2:] | replace('\\', '') | replace('*', '') | trim }}
+                        </span>
+
+                    </div>
+
+                {# Normal paragraphs #}
+                {% elif line.strip() %}
+
+                    <p style="
+                        margin: 9px 0;
+                    ">
+                        {{ line | replace('\\', '') | replace('*', '') | trim }}
+                    </p>
+
+                {% endif %}
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <p style="color:#64748b;">
+            AI analysis is currently unavailable.
+        </p>
+
+    {% endif %}
+
+</section>
+
+<!-- LATEST NEWS -->
+
+<section id="latest-news">
+
+    <h2>📰 Latest Portfolio News</h2>
+    {% if news %}
+    {% for symbol, articles in news.items() %}
+
+        <div style="
+            margin-bottom: 25px;
+        ">
+
+            <h3 style="
+                margin-bottom: 12px;
+            ">
+                {{ symbol }}
+            </h3>
+
+
+            {% if articles %}
+
+                {% for article in articles %}
+
+                    <div style="
+                        padding: 14px 0;
+                        border-bottom: 1px solid #e2e8f0;
+                    ">
+
+                        <a
+                            href="{{ article.link }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style="
+                                color:#0f172a;
+                                font-weight:600;
+                                text-decoration:none;
+                            "
+                        >
+                            {{ article.title }}
+                        </a>
+
+                        <div style="
+                            margin-top:6px;
+                            color:#64748b;
+                            font-size:13px;
+                        ">
+
+                            {{ article.source }}
+
+                            {% if article.published %}
+                                · {{ article.published }}
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <p style="color:#64748b;">
+                    No relevant news is available for this holding in the current news feed.
+                </p>
+
+            {% endif %}
+
+        </div>
+
+    {% endfor %}
+    {% else %}
+        <p class="empty-state">No holdings are available for news coverage.</p>
+    {% endif %}
+
+</section>
+
+<!-- PORTFOLIO ALERTS -->
+
+<section>
+
+    <h2>⚠️ Portfolio Alerts</h2>
+
+    {% if alerts %}
+
+        {% for alert in alerts %}
+
+            <div style="
+                background:#fff7ed;
+                border:1px solid #fed7aa;
+                border-radius:12px;
+                padding:16px;
+                margin-bottom:12px;
+            ">
+
+                <strong>
+                    {{ alert.symbol }}
+                </strong>
+
+                <div style="
+                    margin-top:6px;
+                    color:#475569;
+                    line-height:1.6;
+                ">
+                    {{ alert.message }}
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div style="
+            background:#f0fdf4;
+            border:1px solid #bbf7d0;
+            border-radius:12px;
+            padding:16px;
+            color:#166534;
+        ">
+            No portfolio alerts at the moment.
+        </div>
+
+    {% endif %}
+
+</section>
+
+<!-- PORTFOLIO ALERTS & CHANGES -->
+
+<section id="portfolio-changes">
+    <h2>Portfolio Alerts &amp; Changes</h2>
+
+    {% if not portfolio_changes.available %}
+        <div style="
+            background:#f8fafc;
+            border:1px solid #cbd5e1;
+            border-radius:12px;
+            padding:16px;
+            color:#475569;
+        ">
+            {{ portfolio_changes.message }}
+        </div>
+    {% else %}
+        <p>
+            Latest snapshot: {{ portfolio_changes.latest_date }}
+            · Previous snapshot: {{ portfolio_changes.previous_date }}
+        </p>
+        <p>
+            Portfolio value change:
+            ₹{{ "%.2f"|format(portfolio_changes.portfolio_value.change) }}
+            {% if portfolio_changes.portfolio_value.change_percent is not none %}
+                ({{ "%.2f"|format(portfolio_changes.portfolio_value.change_percent) }}%)
+            {% endif %}
+            <br>
+            Total P&amp;L change:
+            ₹{{ "%.2f"|format(portfolio_changes.total_pnl.change) }}
+        </p>
+
+        {% if portfolio_changes.holding_comparison_available %}
+            <h3>Holding-level changes</h3>
+            <p>
+                Comparing detailed snapshots:
+                {{ portfolio_changes.holding_comparison_previous_date }}
+                → {{ portfolio_changes.holding_comparison_latest_date }}
+            </p>
+            {% if portfolio_changes.holding_changes %}
+                <ul>
+                    {% for holding in portfolio_changes.holding_changes %}
+                        <li>
+                            <strong>{{ holding.company_name }}
+                            ({{ holding.symbol }})</strong>
+                            {% if holding.status == "added" %}
+                                — added holding.
+                            {% elif holding.status == "removed" %}
+                                — removed holding.
+                            {% else %}
+                                <br>
+                                {% if holding.previous_value is not none
+                                      and holding.current_value is not none %}
+                                    Value:
+                                    ₹{{ "%.2f"|format(holding.previous_value) }}
+                                    → ₹{{ "%.2f"|format(holding.current_value) }}
+                                    ({{ "%+.2f"|format(holding.value_change) }}
+                                    {% if holding.value_change_percent is not none %}
+                                        / {{ "%+.2f"|format(holding.value_change_percent) }}%
+                                    {% endif %})
+                                {% else %}
+                                    Value change unavailable in older snapshot data.
+                                {% endif %}
+                                <br>
+                                Unrealized P&amp;L:
+                                {% if holding.previous_unrealized_pnl is not none
+                                      and holding.current_unrealized_pnl is not none %}
+                                    ₹{{ "%.2f"|format(holding.previous_unrealized_pnl) }}
+                                    → ₹{{ "%.2f"|format(holding.current_unrealized_pnl) }}
+                                    ({{ "%+.2f"|format(holding.unrealized_pnl_change) }})
+                                {% else %}
+                                    unavailable in older snapshot data
+                                {% endif %}
+                                <br>
+                                Total P&amp;L:
+                                {% if holding.previous_total_pnl is not none
+                                      and holding.current_total_pnl is not none %}
+                                    ₹{{ "%.2f"|format(holding.previous_total_pnl) }}
+                                    → ₹{{ "%.2f"|format(holding.current_total_pnl) }}
+                                    ({{ "%+.2f"|format(holding.total_pnl_change) }})
+                                {% else %}
+                                    unavailable in older snapshot data
+                                {% endif %}
+                                <br>
+                                Allocation:
+                                {% if holding.previous_allocation_percent is not none
+                                      and holding.current_allocation_percent is not none %}
+                                    {{ "%.2f"|format(holding.previous_allocation_percent) }}%
+                                    → {{ "%.2f"|format(holding.current_allocation_percent) }}%
+                                    ({{ "%+.2f"|format(holding.allocation_change_percentage_points) }} pp)
+                                {% else %}
+                                    unavailable in older snapshot data
+                                {% endif %}
+                                <br>
+                                {% if holding.quantity_change is not none %}
+                                    Quantity:
+                                    {{ holding.previous_quantity }}
+                                    → {{ holding.current_quantity }}
+                                    ({{ "%+.2f"|format(holding.quantity_change) }})
+                                {% else %}
+                                    Quantity change unavailable in older snapshot data.
+                                {% endif %}
+                                {% if holding.current_price_change is not none %}
+                                    <br>
+                                    Current price:
+                                    ₹{{ "%.2f"|format(holding.previous_current_price) }}
+                                    → ₹{{ "%.2f"|format(holding.current_current_price) }}
+                                    ({{ "%+.2f"|format(holding.current_price_change) }})
+                                {% endif %}
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No held positions were recorded in these snapshots.</p>
+            {% endif %}
+
+            <h3>Concentration changes</h3>
+            {% if portfolio_changes.concentration_changes %}
+                <ul>
+                    {% for change in portfolio_changes.concentration_changes %}
+                        <li>
+                            <strong>{{ change.symbol }}</strong> allocation:
+                            {{ "%.2f"|format(change.change_percentage_points) }}
+                            percentage points
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No material concentration changes detected.</p>
+            {% endif %}
+        {% else %}
+            <p>{{ portfolio_changes.holding_comparison_message }}</p>
+        {% endif %}
+
+        <h3>Generated alerts</h3>
+        {% if portfolio_changes.alerts %}
+            <ul>
+                {% for alert in portfolio_changes.alerts %}
+                    <li>
+                        <strong>{{ alert.severity }}</strong>:
+                        {{ alert.message }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No significant portfolio changes detected.</p>
+        {% endif %}
+    {% endif %}
+</section>
+
+<!-- PERFORMANCE CHART -->
+
+{% if historical_analytics.history | length >= 2 %}
+
+<script>
+
+    const history =
+        {{ historical_analytics.history | tojson }};
+
+    const chart =
+        document.getElementById("performanceChart");
+
+
+    if (
+        chart &&
+        history &&
+        history.length >= 2
+    ) {
+
+        const width = 1000;
+
+        const height = 350;
+
+        const padding = 55;
+
+
+        const values =
+            history.map(
+                item =>
+                    item.total_current_value
+            );
+
+
+        const minValue =
+            Math.min(...values);
+
+
+        const maxValue =
+            Math.max(...values);
+
+
+        const range =
+            maxValue - minValue || 1;
+
+
+        const points =
+            history.map(
+                (item, index) => {
+
+                    const x =
+                        history.length === 1
+                            ? width / 2
+                            : padding +
+                              (
+                                  index /
+                                  (history.length - 1)
+                              ) *
+                              (
+                                  width -
+                                  padding * 2
+                              );
+
+
+                    const y =
+                        height -
+                        padding -
+                        (
+                            (
+                                item.total_current_value -
+                                minValue
+                            ) /
+                            range
+                        ) *
+                        (
+                            height -
+                            padding * 2
+                        );
+
+
+                    return {
+                        x,
+                        y,
+                        value:
+                            item.total_current_value,
+                        date:
+                            item.date
+                    };
+
+                }
+            );
+
+
+        const line =
+            points
+                .map(
+                    point =>
+                        `${point.x},${point.y}`
+                )
+                .join(" ");
+
+
+        const gridLines = [];
+
+
+        for (let i = 0; i <= 4; i++) {
+
+            const y =
+                padding +
+                (
+                    i / 4
+                ) *
+                (
+                    height -
+                    padding * 2
+                );
+
+
+            const value =
+                maxValue -
+                (
+                    i / 4
+                ) *
+                range;
+
+
+            gridLines.push(`
+
+                <line
+                    x1="${padding}"
+                    y1="${y}"
+                    x2="${width - padding}"
+                    y2="${y}"
+                    stroke="#e2e8f0"
+                    stroke-width="1"
+                />
+
+                <text
+                    x="5"
+                    y="${y + 5}"
+                    font-size="12"
+                    fill="#64748b"
+                >
+                    ₹${Math.round(
+                        value
+                    ).toLocaleString("en-IN")}
+                </text>
+
+            `);
+
+        }
+
+
+        const dots =
+            points
+                .map(
+                    point => `
+
+                        <circle
+                            cx="${point.x}"
+                            cy="${point.y}"
+                            r="6"
+                            fill="#2563eb"
+                        />
+
+                    `
+                )
+                .join("");
+
+
+        const labels =
+            points
+                .map(
+                    point => `
+
+                        <text
+                            x="${point.x}"
+                            y="${height - 15}"
+                            text-anchor="middle"
+                            font-size="11"
+                            fill="#64748b"
+                        >
+                            ${point.date}
+                        </text>
+
+                    `
+                )
+                .join("");
+
+
+        chart.innerHTML = `
+
+            ${gridLines.join("")}
+
+            <polyline
+                points="${line}"
+                fill="none"
+                stroke="#2563eb"
+                stroke-width="4"
+                stroke-linejoin="round"
+                stroke-linecap="round"
+            />
+
+            ${dots}
+
+            ${labels}
+
+        `;
+
+    }
+
+</script>
+
+{% endif %}
+
+<script>
+    const assistantForm = document.querySelector(
+        'form[action="{{ url_for("assistant_route") }}"]'
+    );
+    const assistantQuestion = document.getElementById("assistant-question");
+    const assistantSubmit = document.getElementById("assistant-submit");
+    const microphoneButton = document.getElementById("assistant-microphone");
+    const voiceStatus = document.getElementById("assistant-voice-status");
+    const assistantExamples = Array.from(
+        document.querySelectorAll(".assistant-example")
+    );
+    const stopSpeakingButton = document.getElementById(
+        "assistant-stop-speaking"
+    );
+    const testVoiceButton = document.getElementById("assistant-test-voice");
+    const readAnswerButton = document.getElementById("assistant-read-answer");
+    const speechSynthesis = window.speechSynthesis;
+    const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const setAssistantStatus = (state, message) => {
+        voiceStatus.dataset.state = state;
+        voiceStatus.textContent = message;
+        voiceStatus.classList.toggle(
+            "processing-indicator",
+            state === "processing"
+        );
+    };
+
+    assistantExamples.forEach((button) => {
+        button.addEventListener("click", () => {
+            assistantQuestion.value = button.dataset.question;
+            assistantQuestion.focus();
+        });
+    });
+
+    if (!SpeechRecognition) {
+        microphoneButton.disabled = true;
+        microphoneButton.setAttribute("aria-label", "Voice input unsupported");
+        setAssistantStatus(
+            "error",
+            "Voice input unavailable in this browser. You can still type your question."
+        );
+    } else {
+        const recognition = new SpeechRecognition();
+        recognition.lang = "en-IN";
+        recognition.interimResults = false;
+        recognition.continuous = false;
+
+        let listening = false;
+        let recognizedQuestion = "";
+        let recognitionError = "";
+
+        const setReadyState = () => {
+            listening = false;
+            microphoneButton.textContent = "🎤 Speak";
+            microphoneButton.setAttribute("aria-pressed", "false");
+        };
+
+        recognition.onstart = () => {
+            listening = true;
+            recognizedQuestion = "";
+            recognitionError = "";
+            microphoneButton.textContent = "🔴 Listening...";
+            microphoneButton.setAttribute("aria-pressed", "true");
+            setAssistantStatus("listening", "Listening...");
+        };
+
+        recognition.onresult = (event) => {
+            recognizedQuestion = Array.from(event.results)
+                .slice(event.resultIndex)
+                .map((result) => result[0].transcript)
+                .join(" ")
+                .trim();
+        };
+
+        recognition.onerror = (event) => {
+            const messages = {
+                "not-allowed": "Microphone permission was denied.",
+                "service-not-allowed": "Microphone permission was denied.",
+                "no-speech": "No speech was detected. Please try again.",
+                "audio-capture": "No microphone is available.",
+                "language-not-supported":
+                    "Speech recognition is unavailable for this language.",
+                network: "Voice recognition is temporarily unavailable."
+            };
+            recognitionError =
+                messages[event.error] || "Voice input failed. Please try again.";
+            setAssistantStatus("error", recognitionError);
+        };
+
+        recognition.onend = () => {
+            setReadyState();
+            if (recognitionError) {
+                return;
+            }
+            if (!recognizedQuestion) {
+                setAssistantStatus("idle", "Ready");
+                return;
+            }
+
+            assistantQuestion.value = recognizedQuestion;
+            setAssistantStatus("processing", "Processing your question...");
+            if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+            }
+            assistantForm.requestSubmit();
+        };
+
+        microphoneButton.addEventListener("click", () => {
+            if (listening) {
+                recognition.stop();
+                return;
+            }
+            setAssistantStatus("idle", "Ready");
+            try {
+                recognition.start();
+            } catch (error) {
+                setReadyState();
+                setAssistantStatus(
+                    "error",
+                    "Voice input could not start. Please try again."
+                );
+            }
+        });
+    }
+
+    assistantForm.addEventListener("submit", (event) => {
+        if (!assistantQuestion.value.trim()) {
+            event.preventDefault();
+            setAssistantStatus("error", "Please enter a question first.");
+            assistantQuestion.focus();
+            return;
+        }
+        setAssistantStatus("processing", "Processing your question...");
+        assistantForm.setAttribute("aria-busy", "true");
+        assistantSubmit.disabled = true;
+        microphoneButton.disabled = true;
+        testVoiceButton.disabled = true;
+        assistantExamples.forEach((button) => {
+            button.disabled = true;
+        });
+        microphoneButton.textContent = "🎤 Speak";
+        microphoneButton.setAttribute("aria-pressed", "false");
+    });
+
+    const dashboardActionForms = Array.from(
+        document.querySelectorAll("form:not(#assistant-form)")
+    );
+    dashboardActionForms.forEach((form) => {
+        form.addEventListener("submit", () => {
+            form.setAttribute("aria-busy", "true");
+            const submitControl = form.querySelector(
+                'button[type="submit"], input[type="submit"]'
+            );
+            if (submitControl) {
+                submitControl.dataset.originalLabel =
+                    submitControl.textContent || submitControl.value;
+                submitControl.disabled = true;
+                if (submitControl.tagName === "INPUT") {
+                    submitControl.value = "Submitting...";
+                } else {
+                    submitControl.textContent = "Submitting...";
+                }
+            }
+        });
+    });
+
+    const assistantAnswer = document.getElementById("assistant-answer");
+    const assistantActionResult = document.querySelector(
+        ".assistant-action-result"
+    );
+    if (assistantAnswer) {
+        setAssistantStatus("idle", "Ready for another question.");
+    } else if (assistantActionResult) {
+        setAssistantStatus("idle", "Computer action completed.");
+    }
+
+    window.addEventListener("pageshow", () => {
+        assistantForm.removeAttribute("aria-busy");
+        assistantSubmit.disabled = false;
+        microphoneButton.disabled = !SpeechRecognition;
+        testVoiceButton.disabled = !speechSynthesis;
+        assistantExamples.forEach((button) => {
+            button.disabled = false;
+        });
+        dashboardActionForms.forEach((form) => {
+            form.removeAttribute("aria-busy");
+            const submitControl = form.querySelector(
+                'button[type="submit"], input[type="submit"]'
+            );
+            if (submitControl) {
+                submitControl.disabled = false;
+                const originalLabel = submitControl.dataset.originalLabel;
+                if (originalLabel) {
+                    if (submitControl.tagName === "INPUT") {
+                        submitControl.value = originalLabel;
+                    } else {
+                        submitControl.textContent = originalLabel;
+                    }
+                    delete submitControl.dataset.originalLabel;
+                }
+            }
+        });
+    });
+
+    let activeUtterance = null;
+    let speechRequestId = 0;
+
+    const setSpeechReady = () => {
+        activeUtterance = null;
+        if (stopSpeakingButton) {
+            stopSpeakingButton.hidden = true;
+        }
+        if (testVoiceButton) {
+            testVoiceButton.textContent = "🔊 Test voice";
+        }
+        if (readAnswerButton) {
+            readAnswerButton.textContent = "🔊 Read answer aloud";
+        }
+    };
+
+    const getAvailableVoices = () => {
+        if (!speechSynthesis ||
+            typeof speechSynthesis.getVoices !== "function") {
+            return [];
+        }
+        return speechSynthesis.getVoices();
+    };
+
+    const waitForVoices = () => new Promise((resolve) => {
+        const voices = getAvailableVoices();
+        if (voices.length || !speechSynthesis) {
+            resolve(voices);
+            return;
+        }
+
+        let settled = false;
+        const priorVoicesChanged = speechSynthesis.onvoiceschanged;
+        const finish = () => {
+            if (settled) {
+                return;
+            }
+            settled = true;
+            clearTimeout(timeoutId);
+            if (typeof speechSynthesis.removeEventListener === "function") {
+                speechSynthesis.removeEventListener(
+                    "voiceschanged",
+                    onVoicesChanged
+                );
+            }
+            if (speechSynthesis.onvoiceschanged === onVoicesChanged) {
+                speechSynthesis.onvoiceschanged = priorVoicesChanged || null;
+            }
+            resolve(getAvailableVoices());
+        };
+        const onVoicesChanged = (event) => {
+            if (typeof priorVoicesChanged === "function") {
+                priorVoicesChanged.call(speechSynthesis, event);
+            }
+            finish();
+        };
+        const timeoutId = setTimeout(finish, 800);
+        if (typeof speechSynthesis.addEventListener === "function") {
+            speechSynthesis.addEventListener(
+                "voiceschanged",
+                onVoicesChanged
+            );
+        } else if ("onvoiceschanged" in speechSynthesis) {
+            speechSynthesis.onvoiceschanged = onVoicesChanged;
+        }
+    });
+
+    const chooseEnglishVoice = (voices) => {
+        const englishVoices = voices.filter((voice) =>
+            /^en(?:-|$)/i.test(voice.lang || "")
+        );
+        return englishVoices.find((voice) =>
+            /^en-IN$/i.test(voice.lang || "")
+        ) || englishVoices.find((voice) =>
+            /^en-US$/i.test(voice.lang || "")
+        ) || englishVoices[0] || null;
+    };
+
+    const speakText = async (text, kind) => {
+        if (!speechSynthesis ||
+            typeof speechSynthesis.speak !== "function" ||
+            typeof window.SpeechSynthesisUtterance !== "function") {
+            setAssistantStatus(
+                "error",
+                "Speech playback isn't supported in this browser. You can still read the answer above."
+            );
+            return;
+        }
+
+        const requestId = ++speechRequestId;
+        try {
+            speechSynthesis.cancel();
+        } catch (error) {
+            setAssistantStatus(
+                "error",
+                "Speech playback failed. You can still read the answer above."
+            );
+            return;
+        }
+        setSpeechReady();
+        setAssistantStatus("speaking", "Preparing speech...");
+
+        const voices = await waitForVoices().catch(() => []);
+        if (requestId !== speechRequestId) {
+            return;
+        }
+
+        const utterance = new window.SpeechSynthesisUtterance(text);
+        const voice = chooseEnglishVoice(voices);
+        utterance.voice = voice;
+        utterance.lang = voice ? voice.lang : "en-US";
+        utterance.rate = 0.95;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        activeUtterance = utterance;
+
+        utterance.onstart = () => {
+            if (requestId !== speechRequestId) {
+                return;
+            }
+            if (stopSpeakingButton) {
+                stopSpeakingButton.hidden = false;
+            }
+            if (kind === "test" && testVoiceButton) {
+                testVoiceButton.textContent = "🔊 Speaking test...";
+            }
+            if (kind === "answer" && readAnswerButton) {
+                readAnswerButton.textContent = "🔊 Speaking answer...";
+            }
+            setAssistantStatus(
+                "speaking",
+                kind === "test" ? "Testing voice playback..." : "Speaking answer..."
+            );
+        };
+
+        utterance.onend = () => {
+            if (requestId !== speechRequestId) {
+                return;
+            }
+            setSpeechReady();
+            setAssistantStatus(
+                "idle",
+                kind === "test"
+                    ? "Voice playback test finished."
+                    : "Ready for another question."
+            );
+        };
+
+        utterance.onerror = (event) => {
+            if (requestId !== speechRequestId) {
+                return;
+            }
+            setSpeechReady();
+            if (event.error === "canceled" || event.error === "interrupted") {
+                setAssistantStatus("idle", "Speech stopped.");
+                return;
+            }
+            setAssistantStatus(
+                "error",
+                kind === "test"
+                    ? "Voice playback test failed. Check your browser's audio settings."
+                    : "Speech playback failed. You can still read the answer above."
+            );
+        };
+
+        try {
+            speechSynthesis.speak(utterance);
+        } catch (error) {
+            if (requestId === speechRequestId) {
+                setSpeechReady();
+                setAssistantStatus(
+                    "error",
+                    "Speech playback failed. You can still read the answer above."
+                );
+            }
+        }
+    };
+
+    if (!speechSynthesis) {
+        if (testVoiceButton) {
+            testVoiceButton.disabled = true;
+        }
+        if (readAnswerButton) {
+            readAnswerButton.disabled = true;
+        }
+        setAssistantStatus(
+            "error",
+            "Speech playback isn't supported in this browser. You can still read the answer above."
+        );
+    } else {
+        testVoiceButton.addEventListener("click", () => {
+            speakText("Voice playback is working.", "test");
+        });
+
+        if (readAnswerButton && assistantAnswer) {
+            readAnswerButton.addEventListener("click", () => {
+                const answerText = new DOMParser()
+                    .parseFromString(assistantAnswer.textContent, "text/html")
+                    .body.textContent
+                    .trim();
+                if (answerText) {
+                    speakText(answerText, "answer");
+                }
+            });
+        }
+
+        if (stopSpeakingButton) {
+            stopSpeakingButton.addEventListener("click", () => {
+                speechRequestId += 1;
+                try {
+                    speechSynthesis.cancel();
+                } finally {
+                    setSpeechReady();
+                    setAssistantStatus("idle", "Speech stopped.");
+                }
+            });
+        }
+
+        if (assistantAnswer && readAnswerButton &&
+            window.SpeechSynthesisUtterance) {
+            const startAnswerSpeech = () => {
+                const answerText = new DOMParser()
+                    .parseFromString(assistantAnswer.textContent, "text/html")
+                    .body.textContent
+                    .trim();
+                if (answerText) {
+                    speakText(answerText, "answer");
+                }
+            };
+
+            if (document.readyState === "complete") {
+                setTimeout(startAnswerSpeech, 0);
+            } else {
+                window.addEventListener("load", startAnswerSpeech, {
+                    once: true
+                });
+            }
+        }
+    }
+</script>
+
+</body>
+
+</html>

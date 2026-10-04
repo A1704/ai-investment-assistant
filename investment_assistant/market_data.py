@@ -1,7 +1,6 @@
 import warnings
 
 # Suppress the Requests dependency warning.
-# The market-data requests themselves are working correctly.
 warnings.filterwarnings(
     "ignore",
     category=Warning,
@@ -39,6 +38,9 @@ def get_yahoo_quote(symbol: str) -> dict:
 
     This is a best-effort market-data source.
     It is not an exchange-authoritative real-time feed.
+
+    Temporary network failures are retried before an error
+    is returned to the caller.
     """
 
     if symbol not in SYMBOL_MAP:
@@ -52,63 +54,103 @@ def get_yahoo_quote(symbol: str) -> dict:
         "interval": "1d",
     }
 
-    try:
-        response = requests.get(
-            url,
-            headers=YAHOO_HEADERS,
-            params=params,
-            timeout=15,
-        )
+    max_attempts = 3
 
-        response.raise_for_status()
+    for attempt in range(1, max_attempts + 1):
 
-        data = response.json()
-
-        chart = data.get("chart", {})
-        results = chart.get("result")
-
-        if not results:
-            error = chart.get("error")
-            raise RuntimeError(
-                f"No market data returned for {symbol}: {error}"
+        try:
+            response = requests.get(
+                url,
+                headers=YAHOO_HEADERS,
+                params=params,
+                timeout=(10, 30),
             )
 
-        meta = results[0].get("meta", {})
+            response.raise_for_status()
 
-        price = meta.get("regularMarketPrice")
+            data = response.json()
 
-        if price is None:
+            chart = data.get("chart", {})
+            results = chart.get("result")
+
+            if not results:
+                error = chart.get("error")
+
+                raise RuntimeError(
+                    f"No market data returned for {symbol}: {error}"
+                )
+
+            meta = results[0].get("meta", {})
+
+            price = meta.get("regularMarketPrice")
+
+            if price is None:
+                raise RuntimeError(
+                    f"No current price found for {symbol}"
+                )
+
+            market_timestamp = meta.get("regularMarketTime")
+
+            if market_timestamp:
+                market_time = datetime.fromtimestamp(
+                    market_timestamp,
+                    tz=timezone.utc,
+                ).isoformat()
+            else:
+                market_time = None
+
+            return {
+                "symbol": symbol,
+                "yahoo_symbol": yahoo_symbol,
+                "price": float(price),
+                "currency": meta.get("currency"),
+                "exchange": meta.get("exchangeName"),
+                "market_timestamp": market_time,
+                "source": "Yahoo Finance chart endpoint",
+                "retrieved_at": datetime.now(
+                    timezone.utc
+                ).isoformat(),
+            }
+
+        except requests.exceptions.Timeout as exc:
+
+            if attempt < max_attempts:
+
+                wait_seconds = 2 ** (attempt - 1)
+
+                print(
+                    f"Yahoo Finance request timed out for "
+                    f"{symbol}. Retrying in "
+                    f"{wait_seconds} seconds..."
+                )
+
+                time.sleep(wait_seconds)
+                continue
+
             raise RuntimeError(
-                f"No current price found for {symbol}"
-            )
+                f"Could not retrieve market data for {symbol} "
+                f"after {max_attempts} attempts: {exc}"
+            ) from exc
 
-        market_timestamp = meta.get("regularMarketTime")
+        except requests.exceptions.RequestException as exc:
 
-        if market_timestamp:
-            market_time = datetime.fromtimestamp(
-                market_timestamp,
-                tz=timezone.utc,
-            ).isoformat()
-        else:
-            market_time = None
+            if attempt < max_attempts:
 
-        return {
-            "symbol": symbol,
-            "yahoo_symbol": yahoo_symbol,
-            "price": float(price),
-            "currency": meta.get("currency"),
-            "exchange": meta.get("exchangeName"),
-            "market_timestamp": market_time,
-            "source": "Yahoo Finance chart endpoint",
-            "retrieved_at": datetime.now(
-                timezone.utc
-            ).isoformat(),
-        }
+                wait_seconds = 2 ** (attempt - 1)
 
-    except requests.RequestException as exc:
-        raise RuntimeError(
-            f"Could not retrieve market data for {symbol}: {exc}"
-        ) from exc
+                print(
+                    f"Yahoo Finance request failed for "
+                    f"{symbol}. Retrying in "
+                    f"{wait_seconds} seconds..."
+                )
+
+                time.sleep(wait_seconds)
+                continue
+
+            raise RuntimeError(
+                f"Could not retrieve market data for {symbol} "
+                f"after {max_attempts} attempts: {exc}"
+            ) from exc
 
 
 def test_prices() -> None:
@@ -123,6 +165,7 @@ def test_prices() -> None:
     print("\nFetching market prices...\n")
 
     for symbol in symbols:
+
         try:
             quote = get_yahoo_quote(symbol)
 
@@ -136,7 +179,9 @@ def test_prices() -> None:
             time.sleep(1)
 
         except Exception as exc:
-            print(f"{symbol:<12} ERROR: {exc}")
+            print(
+                f"{symbol:<12} ERROR: {exc}"
+            )
 
 
 if __name__ == "__main__":
