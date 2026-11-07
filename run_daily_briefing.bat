@@ -1,4 +1,8 @@
 @echo off
-cd /d "C:\Users\Admin\AI Investment Assistant"
+cd /d "%~dp0"
 set PYTHONPATH=.
-".venv\Scripts\python.exe" "scripts\daily_briefing.py"
+if exist ".venv\Scripts\python.exe" (
+    ".venv\Scripts\python.exe" "scripts\daily_briefing.py"
+) else (
+    python "scripts\daily_briefing.py"
+)
